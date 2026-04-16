@@ -1,0 +1,1622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="NoTrace+ — Strip photo metadata, tracking URLs, and search privately. Runs in your browser; nothing sent to our servers; search opens DuckDuckGo when you choose.">
+  <meta name="theme-color" content="#050505">
+
+  <link rel="canonical" href="https://notrace.plus/">
+
+  <meta property="og:site_name" content="NoTrace+">
+  <meta property="og:title" content="NoTrace+">
+  <meta property="og:description" content="Strip photo metadata, clean tracking parameters from URLs, and search privately — browser-first, open source.">
+  <meta property="og:url" content="https://notrace.plus/">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://notrace.plus/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="NoTrace+">
+  <meta name="twitter:description" content="Strip photo metadata, clean tracking parameters from URLs, and search privately — browser-first, open source.">
+  <meta name="twitter:image" content="https://notrace.plus/og.png">
+
+  <link rel="icon" href="favicon/favicon-32x32.ico" sizes="32x32">
+  <link rel="icon" type="image/png" href="favicon/favicon-32x32.png" sizes="32x32">
+  <link rel="apple-touch-icon" href="favicon/favicon-180x180.png" sizes="180x180">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Unbounded:wght@400;600;700;900&display=swap" rel="stylesheet">
+
+  <title>NoTrace+</title>
+
+  <script>
+    if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+    const __forceTop = () => { if (window.scrollY) window.scrollTo(0, 0); };
+    window.addEventListener('load', __forceTop, { once: true });
+    window.addEventListener('pageshow', __forceTop);
+  </script>
+
+  <style>
+    :root {
+      --bg:          #050505;
+      --surface:     #0d0d0d;
+      --surface2:    #141414;
+      --border:      #1f1f1f;
+      --border2:     #2a2a2a;
+      --accent:      #b8ff57;
+      --accent-dim:  rgba(184,255,87,0.07);
+      --accent-glow: rgba(184,255,87,0.16);
+      --text:        #efefef;
+      --text-mid:    #888;
+      --text-dim:    #444;
+      --red:         #ff4545;
+      --amber:       #ffb347;
+      --blue:        #5599ff;
+      --radius:      10px;
+      --mono:        'DM Mono', monospace;
+      --display:     'Unbounded', sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 13px;
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Scanline overlay */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg, transparent, transparent 2px,
+        rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px
+      );
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    /* ── Layout ── */
+    .page { max-width: 820px; margin: 0 auto; padding: 52px 24px 80px; }
+
+    /* ── Header ── */
+    .header { margin-bottom: 48px; animation: fadeUp 0.5s ease both; }
+
+    .logo-row {
+      display: flex; align-items: center; gap: 12px; margin-bottom: 14px;
+    }
+    .logo-img {
+      height: 52px;
+      width: auto;
+      display: block;
+    }
+    .logo-version {
+      font-size: 10px; color: var(--text-dim);
+      border: 1px solid var(--border2); padding: 2px 7px;
+      border-radius: 3px; letter-spacing: 1px; align-self: center;
+    }
+    .header-desc {
+      color: var(--text-mid); font-size: 12px;
+      max-width: 520px; line-height: 1.8;
+    }
+    .trust-bar {
+      display: flex; gap: 6px; flex-wrap: wrap; margin-top: 18px;
+    }
+    .trust-pill {
+      display: flex; align-items: center; gap: 5px;
+      background: var(--surface2); border: 1px solid var(--border2);
+      border-radius: 100px; padding: 4px 11px;
+      font-size: 10px; color: var(--text-mid); letter-spacing: 0.5px;
+    }
+    .trust-pill .dot {
+      width: 5px; height: 5px; border-radius: 50%;
+      background: var(--accent); animation: pulse 2.5s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    /* ── Tool Navigation ── */
+    .tool-nav {
+      display: flex; gap: 4px; margin-bottom: 36px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 5px;
+      animation: fadeUp 0.5s 0.05s ease both;
+    }
+    .tool-tab {
+      flex: 1; background: none; cursor: pointer;
+      border: 1px solid transparent;
+      box-shadow: none;
+      font-family: var(--mono); font-size: 11px; color: var(--text-mid);
+      padding: 10px 8px; border-radius: 8px; letter-spacing: 0.5px;
+      transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+      display: flex; flex-direction: column;
+      align-items: center; gap: 5px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .tool-tab:hover { color: var(--text); background: var(--surface2); }
+    .tool-tab.active {
+      background: var(--accent-dim); color: var(--accent);
+      border-color: rgba(184,255,87,0.2);
+      box-shadow: 0 0 14px rgba(184,255,87,0.07) inset;
+    }
+    .tool-tab:focus:not(:focus-visible) { outline: none; }
+    .tool-tab:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+    .tool-tab svg { width: 16px; height: 16px; stroke: currentColor; }
+    .tool-tab-label { font-size: 10px; letter-spacing: 1px; text-transform: uppercase; }
+
+    /* ── Tool Panels ── */
+    .tool-panel { display: none; animation: fadeUp 0.3s ease both; }
+    .tool-panel.active { display: block; }
+
+    /* ================================================================
+       TOOL 1: NoTrace — Photo Metadata Remover
+    ================================================================ */
+
+    .drop-zone {
+      border: 1.5px dashed var(--border2); border-radius: 16px;
+      padding: 56px 32px; text-align: center; cursor: pointer;
+      transition: border-color 0.2s, background 0.2s, box-shadow 0.2s, transform 0.15s;
+      background: var(--surface); position: relative; overflow: hidden;
+      margin-bottom: 28px;
+    }
+    .drop-zone:hover {
+      border-color: rgba(184,255,87,0.5);
+      background: var(--accent-dim);
+      box-shadow: 0 0 40px rgba(184,255,87,0.06) inset;
+    }
+    .drop-zone.dragging {
+      border-color: var(--accent);
+      background: var(--accent-glow);
+      transform: scale(1.005);
+      box-shadow: 0 0 60px rgba(184,255,87,0.1) inset;
+    }
+    .drop-zone.dragging .drop-icon-wrap { transform: translateY(-6px) scale(1.05); }
+
+    .drop-zone::before, .drop-zone::after, .corner-tr, .corner-bl {
+      content: ''; position: absolute; width: 18px; height: 18px;
+      border-color: var(--border2); border-style: solid; transition: border-color 0.2s;
+    }
+    .drop-zone::before  { top:12px; left:12px; border-width:1.5px 0 0 1.5px; border-radius:3px 0 0 0; }
+    .drop-zone::after   { top:12px; right:12px; border-width:1.5px 1.5px 0 0; border-radius:0 3px 0 0; }
+    .corner-tr          { bottom:12px; right:12px; border-width:0 1.5px 1.5px 0; border-radius:0 0 3px 0; }
+    .corner-bl          { bottom:12px; left:12px; border-width:0 0 1.5px 1.5px; border-radius:0 0 0 3px; }
+    .drop-zone:hover::before, .drop-zone:hover::after,
+    .drop-zone:hover .corner-tr, .drop-zone:hover .corner-bl,
+    .drop-zone.dragging::before, .drop-zone.dragging::after,
+    .drop-zone.dragging .corner-tr, .drop-zone.dragging .corner-bl {
+      border-color: rgba(184,255,87,0.6);
+    }
+
+    .drop-icon-wrap {
+      width: 68px; height: 68px; margin: 0 auto 20px;
+      background: var(--surface2); border: 1px solid var(--border2);
+      border-radius: 16px; display: flex; align-items: center;
+      justify-content: center; transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .drop-zone:hover .drop-icon-wrap {
+      box-shadow: 0 0 20px rgba(184,255,87,0.15);
+      border-color: rgba(184,255,87,0.25);
+    }
+    .drop-icon-wrap svg { width: 30px; height: 30px; stroke: var(--accent); }
+    .drop-title {
+      font-family: var(--display); font-weight: 700;
+      font-size: 18px; letter-spacing: -0.5px; margin-bottom: 8px;
+    }
+    .drop-sub { color: var(--text-mid); font-size: 12px; line-height: 1.8; }
+    .browse-link {
+      color: var(--accent); border-bottom: 1px solid rgba(184,255,87,0.4);
+      cursor: pointer; transition: border-color 0.15s;
+    }
+    .browse-link:hover { border-color: var(--accent); }
+    .format-chips {
+      display: flex; gap: 6px; justify-content: center;
+      flex-wrap: wrap; margin-top: 22px;
+    }
+    .format-chip {
+      font-size: 10px; letter-spacing: 1.5px; color: var(--text-dim);
+      background: var(--bg); border: 1px solid var(--border);
+      padding: 3px 9px; border-radius: 4px;
+    }
+    .heic-note { font-size: 11px; color: var(--text-dim); margin-top: 14px; }
+
+    .queue-wrap { animation: fadeUp 0.3s ease both; }
+    .section-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .section-label {
+      font-family: var(--display); font-size: 10px; font-weight: 700;
+      letter-spacing: 2.5px; text-transform: uppercase; color: var(--text-dim);
+    }
+    .btn-ghost {
+      background: none; border: 1px solid var(--border2); color: var(--text-mid);
+      font-family: var(--mono); font-size: 10px; letter-spacing: 1px;
+      padding: 4px 12px; border-radius: 5px; cursor: pointer; transition: all 0.15s;
+    }
+    .btn-ghost:hover { border-color: var(--red); color: var(--red); }
+
+    .file-list { display: flex; flex-direction: column; gap: 7px; margin-bottom: 20px; }
+
+    .file-card {
+      display: flex; align-items: center; gap: 14px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 12px 14px;
+      transition: border-color 0.2s; animation: slideIn 0.2s ease both; position: relative;
+    }
+    @keyframes slideIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+    .file-card.state-done   { border-color: rgba(184,255,87,0.3); }
+    .file-card.state-error  { border-color: rgba(255,69,69,0.35); }
+    .card-thumb {
+      width: 46px; height: 46px; object-fit: cover; border-radius: 7px;
+      background: var(--surface2); flex-shrink: 0; border: 1px solid var(--border);
+    }
+    .card-body { flex: 1; min-width: 0; }
+    .card-name {
+      font-size: 12px; font-weight: 500; white-space: nowrap;
+      overflow: hidden; text-overflow: ellipsis; margin-bottom: 5px;
+    }
+    .card-tags { display: flex; gap: 5px; flex-wrap: wrap; }
+    .tag {
+      font-size: 9.5px; letter-spacing: 0.8px; padding: 2px 7px;
+      border-radius: 3px; border: 1px solid; text-transform: uppercase;
+    }
+    .tag-size    { border-color: var(--border2); color: var(--text-dim); }
+    .tag-gps     { border-color: rgba(255,179,71,0.5); color: var(--amber); }
+    .tag-device  { border-color: rgba(85,153,255,0.5); color: var(--blue); }
+    .tag-exif    { border-color: rgba(255,69,69,0.4); color: var(--red); }
+    .tag-clean   { border-color: rgba(184,255,87,0.4); color: var(--accent); }
+    .tag-pending { border-color: var(--border2); color: var(--text-dim); }
+    .card-actions { display: flex; align-items: center; gap: 7px; flex-shrink: 0; }
+    .card-status {
+      font-size: 10px; letter-spacing: 0.8px;
+      min-width: 60px; text-align: right; color: var(--text-dim);
+    }
+    .card-status.done    { color: var(--accent); }
+    .card-status.error   { color: var(--red); }
+    .card-status.working { color: var(--text-mid); }
+    .btn-save {
+      background: none; border: 1px solid rgba(184,255,87,0.4); color: var(--accent);
+      font-family: var(--mono); font-size: 10px; letter-spacing: 0.8px;
+      padding: 5px 12px; border-radius: 5px; cursor: pointer;
+      white-space: nowrap; transition: all 0.15s;
+    }
+    .btn-save:hover { background: var(--accent); color: #000; border-color: var(--accent); }
+    .btn-remove {
+      background: none; border: none; color: var(--text-dim); cursor: pointer;
+      padding: 4px; display: flex; align-items: center;
+      border-radius: 4px; transition: color 0.15s;
+    }
+    .btn-remove:hover { color: var(--red); }
+    .btn-remove svg { width: 13px; height: 13px; display: block; }
+    .spinner {
+      width: 12px; height: 12px; border: 1.5px solid var(--border2);
+      border-top-color: var(--accent); border-radius: 50%;
+      animation: spin 0.55s linear infinite; display: inline-block;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .action-bar { display: flex; gap: 10px; margin-bottom: 36px; }
+    .btn-primary {
+      flex: 1; background: var(--accent); color: #050505; border: none;
+      font-family: var(--display); font-weight: 700; font-size: 13px;
+      letter-spacing: 0.3px; padding: 15px 28px; border-radius: 10px;
+      cursor: pointer; transition: all 0.15s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn-primary:hover { background: #c9ff6a; transform: translateY(-1px); }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-primary:disabled {
+      background: var(--surface2); color: var(--text-dim);
+      cursor: not-allowed; transform: none; border: 1px solid var(--border);
+    }
+    .btn-secondary {
+      background: none; border: 1px solid var(--border2); color: var(--text);
+      font-family: var(--mono); font-size: 12px; padding: 15px 22px;
+      border-radius: 10px; cursor: pointer; white-space: nowrap; transition: all 0.15s;
+    }
+    .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-secondary:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    .progress-bar-wrap {
+      height: 3px; background: var(--border); border-radius: 2px;
+      margin-bottom: 20px; overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%; background: var(--accent); border-radius: 2px;
+      transition: width 0.3s ease; width: 0%;
+    }
+
+    /* ================================================================
+       TOOL 2: NoTrack — URL Tracker Stripper
+    ================================================================ */
+
+    .url-input-wrap {
+      position: relative; margin-bottom: 16px;
+    }
+    .url-input {
+      width: 100%; background: var(--surface); border: 1px solid var(--border2);
+      border-radius: 12px; padding: 16px 48px 16px 18px;
+      font-family: var(--mono); font-size: 12px; color: var(--text);
+      outline: none; transition: border-color 0.18s, box-shadow 0.18s;
+      resize: none; min-height: 64px; line-height: 1.6;
+    }
+    .url-input::placeholder { color: var(--text-dim); }
+    .url-input:focus { border-color: rgba(184,255,87,0.4); box-shadow: 0 0 0 3px rgba(184,255,87,0.06); }
+    .url-paste-btn {
+      position: absolute; top: 12px; right: 12px;
+      background: none; border: 1px solid var(--border2); color: var(--text-dim);
+      font-family: var(--mono); font-size: 10px; padding: 4px 10px;
+      border-radius: 5px; cursor: pointer; transition: all 0.15s; letter-spacing: 0.5px;
+    }
+    .url-paste-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    .url-output-wrap {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 16px 18px; margin-bottom: 16px;
+      min-height: 64px; display: none;
+    }
+    .url-output-wrap.visible { display: block; }
+    .url-output-label {
+      font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+      color: var(--text-dim); margin-bottom: 8px;
+    }
+    .url-output-text {
+      font-family: var(--mono); font-size: 12px; color: var(--accent);
+      word-break: break-all; line-height: 1.7;
+    }
+
+    .url-stats-row {
+      display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px;
+    }
+    .url-stat-pill {
+      display: flex; align-items: center; gap: 6px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 6px; padding: 6px 12px; font-size: 11px;
+    }
+    .url-stat-pill .stat-num { color: var(--accent); font-weight: 500; }
+    .url-stat-pill .stat-lbl { color: var(--text-dim); }
+
+    .url-removed-list {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 14px 16px; margin-bottom: 28px; display: none;
+    }
+    .url-removed-list.visible { display: block; }
+    .url-removed-title {
+      font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+      color: var(--text-dim); margin-bottom: 10px;
+    }
+    .url-removed-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 5px 0; border-bottom: 1px solid var(--border);
+      font-size: 11px;
+    }
+    .url-removed-item:last-child { border-bottom: none; }
+    .url-removed-key { color: var(--red); flex-shrink: 0; }
+    .url-removed-val { color: var(--text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+    .url-removed-source {
+      font-size: 9px; color: var(--text-dim); background: var(--surface2);
+      border: 1px solid var(--border2); padding: 1px 6px; border-radius: 3px;
+      white-space: nowrap; flex-shrink: 0;
+    }
+
+    .url-action-row { display: flex; gap: 8px; margin-bottom: 12px; }
+    .url-btn {
+      background: none; border: 1px solid var(--border2); color: var(--text-mid);
+      font-family: var(--mono); font-size: 11px; padding: 10px 18px;
+      border-radius: 8px; cursor: pointer; transition: all 0.15s; letter-spacing: 0.3px;
+    }
+    .url-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .url-btn.primary-url {
+      background: var(--accent); color: #050505; border-color: var(--accent);
+      font-weight: 500;
+    }
+    .url-btn.primary-url:hover { background: #c9ff6a; }
+    .url-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    /* ================================================================
+       TOOL 3: NoSearch — Private DuckDuckGo Search
+    ================================================================ */
+
+    .search-wrap { margin-bottom: 28px; }
+    .search-box {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--surface); border: 1px solid var(--border2);
+      border-radius: 12px; padding: 0 16px;
+      transition: border-color 0.18s, box-shadow 0.18s;
+    }
+    .search-box:focus-within {
+      border-color: rgba(184,255,87,0.4);
+      box-shadow: 0 0 0 3px rgba(184,255,87,0.06);
+    }
+    .search-box svg { width: 17px; height: 17px; stroke: var(--text-dim); flex-shrink: 0; }
+    .search-input {
+      flex: 1; background: transparent; border: none; outline: none;
+      color: var(--text); font-family: var(--mono); font-size: 13px;
+      padding: 16px 0; min-width: 0;
+    }
+    .search-input::placeholder { color: var(--text-dim); }
+    .search-go-btn {
+      background: var(--accent); color: #050505; border: none;
+      font-family: var(--display); font-weight: 700; font-size: 11px;
+      padding: 8px 16px; border-radius: 7px; cursor: pointer;
+      letter-spacing: 0.3px; transition: all 0.15s; flex-shrink: 0;
+    }
+    .search-go-btn:hover { background: #c9ff6a; }
+
+    .search-note {
+      margin-top: 10px; font-size: 11px; color: var(--text-dim); line-height: 1.7;
+    }
+    .search-note a { color: var(--accent); text-decoration: none; border-bottom: 1px solid rgba(184,255,87,0.3); }
+
+    /* ================================================================
+       SHARED: Info Panels
+    ================================================================ */
+
+    .panel {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; overflow: hidden; margin-bottom: 16px;
+      animation: fadeUp 0.5s 0.2s ease both;
+    }
+    .panel-head {
+      display: flex; align-items: center; gap: 10px;
+      padding: 16px 20px; border-bottom: 1px solid var(--border);
+    }
+    .panel-head svg { width: 18px; height: 18px; stroke: var(--accent); flex-shrink: 0; }
+    .panel-head img { width: 24px; height: 24px; flex-shrink: 0; display: block; }
+    .panel-head img.panel-icon-lg { width: 48px; height: 48px; }
+    .panel-head-text { flex: 1; }
+    .panel-head-title {
+      font-family: var(--display); font-weight: 700; font-size: 12px; letter-spacing: 0.3px;
+    }
+    .panel-head-sub { font-size: 11px; color: var(--text-mid); margin-top: 2px; }
+    .verified-badge {
+      font-size: 9px; letter-spacing: 1.5px; color: var(--accent);
+      border: 1px solid rgba(184,255,87,0.3); padding: 3px 8px;
+      border-radius: 3px; text-transform: uppercase;
+    }
+    .panel-body { padding: 16px 20px; }
+
+    .how-list { display: flex; flex-direction: column; gap: 0; }
+    .how-item {
+      display: flex; align-items: flex-start; gap: 16px; padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .how-item:last-child { border-bottom: none; }
+    .how-num {
+      font-family: var(--display); font-weight: 900; font-size: 20px;
+      color: var(--accent);
+      flex: 0 0 3rem;
+      width: 3rem;
+      text-align: center;
+      line-height: 1.2;
+    }
+    .how-text strong { display: block; font-size: 12px; color: var(--text); margin-bottom: 3px; }
+    .how-text span { font-size: 11px; color: var(--text-mid); }
+    .how-text span a { color: var(--accent); text-decoration: none; border-bottom: 1px solid rgba(184,255,87,0.3); transition: border-color 0.15s; }
+    .how-text span a:hover { border-color: var(--accent); }
+
+    .strip-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 6px;
+    }
+    .strip-item {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 11px 14px; background: var(--surface2);
+      border: 1px solid var(--border); border-radius: 8px;
+    }
+    .strip-item svg { width: 13px; height: 13px; stroke: var(--accent); flex-shrink: 0; margin-top: 1px; }
+    .strip-item-name { font-size: 11px; color: var(--text); margin-bottom: 2px; }
+    .strip-item-eg   { font-size: 10px; color: var(--text-dim); font-style: italic; }
+
+    .headers-list { display: flex; flex-direction: column; gap: 5px; }
+    .header-row {
+      display: flex; gap: 12px; padding: 8px 12px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 6px; align-items: baseline; flex-wrap: wrap;
+    }
+    .header-key  { font-size: 10px; color: var(--accent); min-width: 200px; flex-shrink: 0; }
+    .header-val  { font-size: 10px; color: var(--text-dim); font-style: italic; word-break: break-all; }
+
+    /* ── Footer ── */
+    footer {
+      margin-top: 56px; padding-top: 24px; border-top: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 12px 20px;
+    }
+    .footer-left {
+      flex: 1 1 auto;
+      min-width: 0;
+      font-size: 11px; color: var(--text-dim);
+      display: flex; align-items: center; flex-wrap: wrap; gap: 6px;
+    }
+    .footer-right {
+      flex: 0 0 auto;
+      display: flex; align-items: center; justify-content: flex-end;
+      margin-left: auto;
+    }
+    .footer-link {
+      font-size: 10px; color: var(--text-dim); text-decoration: none;
+      letter-spacing: 0.5px; transition: color 0.15s;
+    }
+    .footer-link:hover { color: var(--accent); }
+
+    /* ── Animations ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .hidden { display: none !important; }
+
+    /* ── Responsive ── */
+    @media (max-width: 580px) {
+      .page { padding: 32px 16px 48px; }
+      .drop-zone { padding: 40px 20px; }
+      .action-bar { flex-direction: column; }
+      .btn-primary, .btn-secondary { width: 100%; }
+      .strip-grid { grid-template-columns: 1fr 1fr; }
+      .header-key { min-width: unset; width: 100%; }
+      .tool-tab-label { display: none; }
+      .url-action-row { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- ══════════════════════════════════════════════════
+       HEADER
+  ══════════════════════════════════════════════════ -->
+  <header class="header">
+    <div class="logo-row">
+      <img src="logo.png" alt="NoTrace+" class="logo-img">
+    </div>
+    <p class="header-desc">
+      Three privacy tools in one. Strip photo metadata, clean tracking parameters from URLs, and search privately.
+      Runs entirely in your browser — we never receive your files or URLs.
+    </p>
+    <div class="trust-bar">
+      <div class="trust-pill"><span class="dot"></span> Open source</div>
+      <div class="trust-pill"><span class="dot"></span> Local processing only</div>
+      <div class="trust-pill"><span class="dot"></span> No uploads</div>
+    </div>
+  </header>
+
+  <!-- ══════════════════════════════════════════════════
+       TOOL NAVIGATION
+  ══════════════════════════════════════════════════ -->
+  <nav class="tool-nav" role="tablist" aria-label="Tools">
+    <button class="tool-tab active" role="tab" aria-selected="true" onclick="switchTool('notrace', this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="2.5"/>
+        <circle cx="8.5" cy="8.5" r="1.5"/>
+        <polyline points="21,15 16,10 5,21"/>
+      </svg>
+      <span class="tool-tab-label">Photo Metadata</span>
+    </button>
+    <button class="tool-tab" role="tab" aria-selected="false" onclick="switchTool('notrack', this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+        <line x1="4" y1="4" x2="20" y2="20"/>
+      </svg>
+      <span class="tool-tab-label">URL Tracking</span>
+    </button>
+    <button class="tool-tab" role="tab" aria-selected="false" onclick="switchTool('nosearch', this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <span class="tool-tab-label">Private Search</span>
+    </button>
+    <button class="tool-tab" role="tab" aria-selected="false" onclick="switchTool('sectips', this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        <path d="M9 12l2 2 4-4"/>
+      </svg>
+      <span class="tool-tab-label">Security Tips</span>
+    </button>
+  </nav>
+
+  <!-- ══════════════════════════════════════════════════
+       TOOL 1: NoTrace
+  ══════════════════════════════════════════════════ -->
+  <div id="panel-notrace" class="tool-panel active">
+
+    <div class="drop-zone" id="dropZone" role="button" aria-label="Upload images">
+      <span class="corner-tr"></span>
+      <span class="corner-bl"></span>
+      <div class="drop-icon-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2.5"/>
+          <circle cx="8.5" cy="8.5" r="1.5"/>
+          <polyline points="21,15 16,10 5,21"/>
+        </svg>
+      </div>
+      <h2 class="drop-title">Drop your photos here</h2>
+      <p class="drop-sub">
+        Drag from Mac, Windows, or <span class="browse-link" id="browseLink">tap to browse</span> on iPhone &amp; Android
+      </p>
+      <div class="format-chips">
+        <span class="format-chip">JPEG</span>
+        <span class="format-chip">PNG</span>
+        <span class="format-chip">HEIC</span>
+        <span class="format-chip">WEBP</span>
+        <span class="format-chip">TIFF</span>
+        <span class="format-chip">GIF</span>
+        <span class="format-chip">BMP</span>
+        <span class="format-chip">AVIF</span>
+      </div>
+      <p class="heic-note">HEIC: if your browser can’t open it, convert/export to JPEG first</p>
+      <input type="file" id="fileInput" accept="image/*" multiple style="position:fixed;top:-9999px;left:-9999px;opacity:0;pointer-events:none;">
+    </div>
+
+    <div id="queueWrap" class="queue-wrap hidden">
+      <div class="section-header">
+        <span class="section-label" id="queueLabel">0 files</span>
+        <button class="btn-ghost" id="clearBtn">Clear all</button>
+      </div>
+      <div class="progress-bar-wrap hidden" id="progressWrap">
+        <div class="progress-bar-fill" id="progressFill"></div>
+      </div>
+      <div class="file-list" id="fileList"></div>
+      <div class="action-bar">
+        <button class="btn-primary" id="cleanBtn" disabled>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <path d="M9 12l2 2 4-4"/>
+          </svg>
+          Strip All Metadata
+        </button>
+        <button class="btn-secondary" id="downloadAllBtn" disabled>↓ Download All</button>
+      </div>
+    </div>
+
+    <!-- Privacy proof -->
+    <div class="panel">
+      <div class="panel-head">
+        <img src="icons/shield.png" alt="">
+        <div class="panel-head-text">
+          <div class="panel-head-title">How it works</div>
+          <div class="panel-head-sub">Technically enforced — not just a promise.</div>
+        </div>
+        <span class="verified-badge">Verified</span>
+      </div>
+      <div class="panel-body">
+        <div class="how-list">
+          <div class="how-item">
+            <div class="how-num">01</div>
+            <div class="how-text">
+              <strong>Files are read via the Web File API</strong>
+              <span>Your browser reads the image directly from disk into memory. No network request is made. The file bytes never touch a server.</span>
+            </div>
+          </div>
+          <div class="how-item">
+            <div class="how-num">02</div>
+            <div class="how-text">
+              <strong>Metadata is stripped by re-rendering through Canvas</strong>
+              <span>The image is drawn onto an HTML Canvas element and re-exported. The Canvas API only copies pixel data — all EXIF, XMP, IPTC, and ICC metadata is discarded.</span>
+            </div>
+          </div>
+          <div class="how-item">
+            <div class="how-num">03</div>
+            <div class="how-text">
+              <strong>The clean file is generated in-memory</strong>
+              <span>canvas.toBlob() creates a new Blob entirely in browser memory. It is handed directly to a download link — never transmitted anywhere.</span>
+            </div>
+          </div>
+          <div class="how-item">
+            <div class="how-num">04</div>
+            <div class="how-text">
+              <strong>CSP headers block all outbound connections</strong>
+              <span>The server sends <code>connect-src 'none'</code> — even if malicious code were injected, it cannot make network requests. Your images are physically unable to leave your browser.</span>
+            </div>
+          </div>
+          <div class="how-item">
+            <div class="how-num">!</div>
+            <div class="how-text">
+              <strong>EXIF removal is one layer — not a complete anonymity solution</strong>
+              <span>Stripped images still carry visual content. Faces, landmarks, vehicle plates, and background details can identify location and identity regardless of metadata. If the image itself is sensitive, consider whether sharing it at all is appropriate.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- What gets stripped -->
+    <div class="panel">
+      <div class="panel-head">
+        <img src="icons/trash.png" alt="">
+        <div class="panel-head-text">
+          <div class="panel-head-title">10+ metadata categories stripped</div>
+          <div class="panel-head-sub">All metadata fields removed from the output file.</div>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="strip-grid">
+          <div class="strip-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <div><div class="strip-item-name">GPS Coordinates</div><div class="strip-item-eg">Lat/long, altitude, bearing, speed</div></div>
+          </div>
+          <div class="strip-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
+            <div><div class="strip-item-name">Device Model</div><div class="strip-item-eg">iPhone 16 Pro, Samsung S24, etc.</div></div>
+          </div>
+          <div class="strip-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+            <div><div class="strip-item-name">Date &amp; Time</div><div class="strip-item-eg">When the photo was taken</div></div>
+          </div>
+          <div class="strip-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+            <div><div class="strip-item-name">Camera Settings</div><div class="strip-item-eg">ISO, shutter speed, aperture, focal length</div></div>
+          </div>
+          <div class="strip-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <div><div class="strip-item-name">Author &amp; Copyright</div><div class="strip-item-eg">Name, owner, rights info</div></div>
+          </div>
+          <div class="strip-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            <div><div class="strip-item-name">Software Tag</div><div class="strip-item-eg">Photoshop, Lightroom, iOS Camera</div></div>
+          </div>
+          <div class="strip-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+            <div><div class="strip-item-name">XMP &amp; IPTC Data</div><div class="strip-item-eg">Editorial tags, keywords, categories</div></div>
+          </div>
+          <div class="strip-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+            <div><div class="strip-item-name">Maker Notes</div><div class="strip-item-eg">Proprietary Apple/Samsung/Canon data</div></div>
+          </div>
+          <div class="strip-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+            <div><div class="strip-item-name">Thumbnail Preview</div><div class="strip-item-eg">Embedded EXIF preview image</div></div>
+          </div>
+          <div class="strip-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            <div><div class="strip-item-name">ICC Color Profile</div><div class="strip-item-eg">Display calibration metadata</div></div>
+          </div>
+          <div class="strip-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <div><div class="strip-item-name">Device Serial Number</div><div class="strip-item-eg">Unique hardware identifier</div></div>
+          </div>
+          <div class="strip-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <div><div class="strip-item-name">Comments &amp; Notes</div><div class="strip-item-eg">User-added captions, descriptions</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div><!-- /notrace -->
+
+  <!-- ══════════════════════════════════════════════════
+       TOOL 2: NoTrack
+  ══════════════════════════════════════════════════ -->
+  <div id="panel-notrack" class="tool-panel">
+
+    <div class="url-input-wrap">
+      <textarea
+        class="url-input"
+        id="urlInput"
+        placeholder="Paste a URL — tracking parameters are stripped instantly"
+        rows="2"
+        spellcheck="false"
+        autocomplete="off"
+      ></textarea>
+      <button class="url-paste-btn" onclick="pasteUrl()">Paste</button>
+    </div>
+
+    <div id="urlOutputWrap" class="url-output-wrap">
+      <div class="url-output-label">Clean URL</div>
+      <div class="url-output-text" id="urlOutputText"></div>
+    </div>
+
+    <div id="urlStatsRow" class="url-stats-row" style="display:none">
+      <div class="url-stat-pill">
+        <span class="stat-num" id="statRemoved">0</span>
+        <span class="stat-lbl">parameters removed</span>
+      </div>
+      <div class="url-stat-pill">
+        <span class="stat-num" id="statTotal">0</span>
+        <span class="stat-lbl">total parameters</span>
+      </div>
+      <div class="url-stat-pill" id="statCleanPill" style="display:none">
+        <span class="stat-num" style="color:var(--accent)">✓</span>
+        <span class="stat-lbl">already clean</span>
+      </div>
+    </div>
+
+    <div id="urlRemovedList" class="url-removed-list">
+      <div class="url-removed-title">Removed parameters</div>
+      <div id="urlRemovedItems"></div>
+    </div>
+
+    <div class="url-action-row">
+      <button class="url-btn primary-url" id="urlCopyBtn" onclick="copyCleanUrl()" disabled>Copy clean URL</button>
+      <button class="url-btn" onclick="openCleanUrl()" id="urlOpenBtn" disabled>Open in new tab</button>
+      <button class="url-btn" onclick="clearUrl()">Clear</button>
+    </div>
+
+    <!-- How it works -->
+    <div class="panel" style="margin-top:28px">
+      <div class="panel-head">
+        <img src="icons/shield.png" alt="">
+        <div class="panel-head-text">
+          <div class="panel-head-title">How it works</div>
+          <div class="panel-head-sub">Client-side only — the URL never leaves your browser.</div>
+        </div>
+        <span class="verified-badge">Verified</span>
+      </div>
+      <div class="panel-body">
+        <div class="how-list">
+          <div class="how-item">
+            <div class="how-num">01</div>
+            <div class="how-text">
+              <strong>URL is parsed entirely in JavaScript</strong>
+              <span>No fetch, no XHR, no server. The URL string is parsed with the browser's built-in <code>URL()</code> API — no network request is made.</span>
+            </div>
+          </div>
+          <div class="how-item">
+            <div class="how-num">02</div>
+            <div class="how-text">
+              <strong>190+ known tracking parameters are matched and removed</strong>
+              <span>The parameter list covers Google, Meta, UTM, Microsoft, Twitter/X, TikTok, YouTube, LinkedIn, HubSpot, Mailchimp, and 20+ other platforms.</span>
+            </div>
+          </div>
+          <div class="how-item">
+            <div class="how-num">03</div>
+            <div class="how-text">
+              <strong>Non-tracking parameters are preserved exactly</strong>
+              <span>Only known tracking keys are removed. Query parameters that affect page content (search terms, filters, product IDs) are left intact.</span>
+            </div>
+          </div>
+          <div class="how-item">
+            <div class="how-num">04</div>
+            <div class="how-text">
+              <strong>CSP <code>connect-src 'none'</code> enforces zero transmission</strong>
+              <span>Even if malicious code were injected, the browser blocks all outbound network connections. Your URLs cannot leave the page.</span>
+            </div>
+          </div>
+          <div class="how-item">
+            <div class="how-num">!</div>
+            <div class="how-text">
+              <strong>Tracking parameters are one layer — not the whole picture</strong>
+              <span>Trackers also use first-party cookies, browser fingerprinting, server-side logging, and IP-based identification — none of which are visible in the URL. Stripping tracking parameters reduces one signal. For broader protection, combine this with a content blocker such as <a href="https://ublockorigin.com" target="_blank" rel="noopener noreferrer">uBlock Origin</a> and a privacy-respecting DNS resolver.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- What gets stripped -->
+    <div class="panel">
+      <div class="panel-head">
+        <img src="icons/trash.png" alt="">
+        <div class="panel-head-text">
+          <div class="panel-head-title">190+ tracking parameters covered</div>
+          <div class="panel-head-sub">All major ad networks, email platforms, and analytics vendors.</div>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="strip-grid">
+          <div class="strip-item"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M8.56 2.75c4.37 6.03 6.02 9.42 8.03 17.72m2.54-15.38c-3.72 4.35-8.94 5.66-16.88 5.85m19.5 1.9c-3.5-.93-6.63-.82-8.94 0-2.58.92-5.01 2.86-7.44 6.32"/></svg>
+            <div><div class="strip-item-name">Google</div><div class="strip-item-eg">gclid, dclid, srsltid, _ga, ved…</div></div>
+          </div>
+          <div class="strip-item"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+            <div><div class="strip-item-name">Meta / Facebook</div><div class="strip-item-eg">fbclid, fb_action_ids, fbp…</div></div>
+          </div>
+          <div class="strip-item"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>
+            <div><div class="strip-item-name">UTM (all platforms)</div><div class="strip-item-eg">utm_source, utm_medium, utm_campaign…</div></div>
+          </div>
+          <div class="strip-item"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"/></svg>
+            <div><div class="strip-item-name">Twitter / X</div><div class="strip-item-eg">twclid, twsrc, twgr, twcamp…</div></div>
+          </div>
+          <div class="strip-item"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+            <div><div class="strip-item-name">Microsoft</div><div class="strip-item-eg">msclkid</div></div>
+          </div>
+          <div class="strip-item"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+            <div><div class="strip-item-name">LinkedIn</div><div class="strip-item-eg">li_fat_id, trackingId, trk…</div></div>
+          </div>
+          <div class="strip-item"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><polygon points="23,7 16,12 23,17"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+            <div><div class="strip-item-name">YouTube</div><div class="strip-item-eg">si, pp, ab_channel, feature…</div></div>
+          </div>
+          <div class="strip-item"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            <div><div class="strip-item-name">Email platforms</div><div class="strip-item-eg">HubSpot, Mailchimp, Klaviyo, Marketo…</div></div>
+          </div>
+          <div class="strip-item"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            <div><div class="strip-item-name">TikTok, Pinterest, Snap</div><div class="strip-item-eg">ttclid, epik, sccid…</div></div>
+          </div>
+          <div class="strip-item"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            <div><div class="strip-item-name">Instagram</div><div class="strip-item-eg">igshid, ig_mid, ig_rid…</div></div>
+          </div>
+          <div class="strip-item"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+            <div><div class="strip-item-name">Amazon</div><div class="strip-item-eg">tag, linkCode, pf_rd_p, ref_…</div></div>
+          </div>
+          <div class="strip-item"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+            <div><div class="strip-item-name">Yandex, Adobe, Piwik</div><div class="strip-item-eg">yclid, s_kwcid, pk_campaign…</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div><!-- /notrack -->
+
+  <!-- ══════════════════════════════════════════════════
+       TOOL 3: NoSearch
+  ══════════════════════════════════════════════════ -->
+  <div id="panel-nosearch" class="tool-panel">
+
+    <div class="search-wrap">
+      <div class="search-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input
+          class="search-input"
+          id="searchInput"
+          type="text"
+          placeholder="Search via DuckDuckGo — no tracking, no search history"
+          autocomplete="off"
+          spellcheck="false"
+        >
+        <button class="search-go-btn" onclick="doSearch()">Search</button>
+      </div>
+
+      <p class="search-note">
+        Searches open in a new tab at <a href="https://duckduckgo.com" target="_blank" rel="noopener noreferrer">duckduckgo.com</a> with
+        safe search off and strict privacy parameters enforced in the URL. DuckDuckGo does not store search history
+        or build user profiles. NoTrace+ does not log, store, or transmit your search terms — they are only ever
+        passed directly to DuckDuckGo as a URL parameter when you press search.
+      </p>
+    </div>
+
+    <!-- How it works -->
+    <div class="panel">
+      <div class="panel-head">
+        <img src="icons/shield.png" alt="">
+        <div class="panel-head-text">
+          <div class="panel-head-title">How it works</div>
+          <div class="panel-head-sub">DuckDuckGo opens in a new tab only after you click search.</div>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="how-list">
+          <div class="how-item">
+            <div class="how-num">✓</div>
+            <div class="how-text">
+              <strong>Your search terms are not logged here</strong>
+              <span>NoTrace+ does not store, transmit, or log what you type. The search term leaves your browser only when you press search, passed directly to DuckDuckGo as a URL query parameter.</span>
+            </div>
+          </div>
+          <div class="how-item">
+            <div class="how-num">✓</div>
+            <div class="how-text">
+              <strong>DuckDuckGo does not build user profiles</strong>
+              <span>DuckDuckGo's stated policy is that they do not store personal information or search history tied to your IP address. They make money through contextual ads based on search terms, not user profiling.</span>
+            </div>
+          </div>
+          <div class="how-item">
+            <div class="how-num">✓</div>
+            <div class="how-text">
+              <strong>Strict privacy parameters enforced in the URL</strong>
+              <span><code>kp=-2</code> disables safe search filtering. No affiliate IDs, referrer tokens, or tracking parameters are added to the query.</span>
+            </div>
+          </div>
+          <div class="how-item">
+            <div class="how-num">!</div>
+            <div class="how-text">
+              <strong>DuckDuckGo still receives your search term and IP address</strong>
+              <span>This is an inherent limitation of any web-based search engine. NoTrace+ cannot change this. To prevent your IP from being seen by the search engine, route your traffic through <a href="https://www.torproject.org" target="_blank" rel="noopener noreferrer">Tor Browser</a> or a trusted VPN such as <a href="https://mullvad.net" target="_blank" rel="noopener noreferrer">Mullvad</a> before searching. Mullvad accepts anonymous payment (cash, Monero) and keeps no logs.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div><!-- /nosearch -->
+
+  <!-- ══════════════════════════════════════════════════
+       TOOL 4: Security Tips
+  ══════════════════════════════════════════════════ -->
+  <div id="panel-sectips" class="tool-panel">
+    <div class="panel">
+      <div class="panel-head">
+        <img src="icons/privacy.png" alt="" class="panel-icon-lg">
+        <div class="panel-head-text">
+          <div class="panel-head-title">Privacy this page can't do alone</div>
+          <div class="panel-head-sub">Your IP, trackers outside the browser, fingerprints, and secure messaging — each needs its own tools. Practical tips below.</div>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="how-list">
+          <div class="how-item">
+            <div class="how-num">1</div>
+            <div class="how-text">
+              <strong>Hide your IP address — use Tor Browser or a VPN</strong>
+              <span>Every request you make reveals your IP to the destination server. <a href="https://www.torproject.org" target="_blank" rel="noopener noreferrer">Tor Browser</a> routes your traffic through three relays so no single party knows both who you are and what you requested. <a href="https://mullvad.net" target="_blank" rel="noopener noreferrer">Mullvad VPN</a> is a well-audited alternative — no accounts, no logs, accepts anonymous payment.</span>
+            </div>
+          </div>
+          <div class="how-item">
+            <div class="how-num">2</div>
+            <div class="how-text">
+              <strong>Block trackers at the network level — use a DNS resolver</strong>
+              <span><a href="https://mullvad.net/en/help/dns-over-https-and-dns-over-tls" target="_blank" rel="noopener noreferrer">Mullvad DNS</a> and <a href="https://nextdns.io" target="_blank" rel="noopener noreferrer">NextDNS</a> block tracking domains before a connection is made — covering ads, telemetry, and malware domains across all apps on your device, not just in the browser.</span>
+            </div>
+          </div>
+          <div class="how-item">
+            <div class="how-num">3</div>
+            <div class="how-text">
+              <strong>Prevent browser fingerprinting — use Tor Browser or Firefox with arkenfox</strong>
+              <span>Even without cookies, browsers leak a unique fingerprint through screen size, fonts, canvas rendering, and dozens of other signals. <a href="https://www.torproject.org" target="_blank" rel="noopener noreferrer">Tor Browser</a> standardises these values across all users. <a href="https://github.com/arkenfox/user.js" target="_blank" rel="noopener noreferrer">arkenfox user.js</a> hardens Firefox towards the same goal.</span>
+            </div>
+          </div>
+          <div class="how-item">
+            <div class="how-num">4</div>
+            <div class="how-text">
+              <strong>Encrypted email — use Proton Mail or Tuta</strong>
+              <span><a href="https://proton.me" target="_blank" rel="noopener noreferrer">Proton Mail</a> and <a href="https://tuta.com" target="_blank" rel="noopener noreferrer">Tuta</a> store mail encrypted at rest. Neither can read your messages. Both are open source and independently audited. Note that encryption only applies end-to-end when both sender and recipient use a compatible provider.</span>
+            </div>
+          </div>
+          <div class="how-item">
+            <div class="how-num">5</div>
+            <div class="how-text">
+              <strong>Encrypted messaging — use Signal</strong>
+              <span><a href="https://signal.org" target="_blank" rel="noopener noreferrer">Signal</a> uses end-to-end encryption by default for all messages and calls. The Signal Protocol is open source and has been independently audited. Signal collects no message content, no metadata about who you message, and no call logs.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div><!-- /sectips -->
+
+  <!-- ══════════════════════════════════════════════════
+       SHARED: Security Headers
+  ══════════════════════════════════════════════════ -->
+  <div class="panel" style="margin-top: 8px;">
+    <div class="panel-head">
+      <img src="icons/lock.png" alt="">
+      <div class="panel-head-text">
+        <div class="panel-head-title">Security headers</div>
+        <div class="panel-head-sub">Enforced server-side on every response via vercel.json.</div>
+      </div>
+    </div>
+    <div class="panel-body">
+      <div class="headers-list">
+        <div class="header-row">
+          <span class="header-key">Content-Security-Policy</span>
+          <span class="header-val">connect-src 'none' — all outbound network connections blocked at browser level</span>
+        </div>
+        <div class="header-row">
+          <span class="header-key">Permissions-Policy</span>
+          <span class="header-val">camera=(), microphone=(), geolocation=() — hardware access denied</span>
+        </div>
+        <div class="header-row">
+          <span class="header-key">Referrer-Policy</span>
+          <span class="header-val">no-referrer — nothing leaked to external resources</span>
+        </div>
+        <div class="header-row">
+          <span class="header-key">Strict-Transport-Security</span>
+          <span class="header-val">max-age=63072000; includeSubDomains; preload — HTTPS only, 2 years</span>
+        </div>
+        <div class="header-row">
+          <span class="header-key">Cross-Origin-Embedder-Policy</span>
+          <span class="header-val">require-corp — prevents cross-origin data leakage</span>
+        </div>
+        <div class="header-row">
+          <span class="header-key">Cross-Origin-Opener-Policy</span>
+          <span class="header-val">same-origin — isolates browsing context</span>
+        </div>
+        <div class="header-row">
+          <span class="header-key">X-Frame-Options</span>
+          <span class="header-val">DENY — cannot be iframed or clickjacked</span>
+        </div>
+        <div class="header-row">
+          <span class="header-key">X-Content-Type-Options</span>
+          <span class="header-val">nosniff — MIME type cannot be overridden</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════
+       FOOTER
+  ══════════════════════════════════════════════════ -->
+  <footer>
+    <div class="footer-left">
+      <span>© 2026 NoTrace+ · MIT License</span>
+    </div>
+    <div class="footer-right">
+      <a class="footer-link" href="https://github.com/gitpushnico" target="_blank" rel="noopener noreferrer">GitHub</a>
+    </div>
+  </footer>
+
+</div><!-- /page -->
+
+<script>
+'use strict';
+
+// ================================================================
+//  NoTrace+ — All-in-one privacy toolkit
+//  NoTrace: client-side EXIF/metadata remover
+//  NoTrack: client-side URL tracking parameter stripper
+//  NoSearch: private DuckDuckGo search front-end
+//
+//  Privacy guarantee: connect-src 'none' CSP blocks all outbound
+//  network connections. No data can leave the page.
+//  MIT License — https://github.com/gitpushnico/notrace-plus
+// ================================================================
+
+// ── Tab switching ─────────────────────────────────────────────────
+function switchTool(id, btn) {
+  document.querySelectorAll('.tool-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tool-tab').forEach(t => {
+    t.classList.remove('active');
+    t.setAttribute('aria-selected', 'false');
+  });
+  document.getElementById('panel-' + id).classList.add('active');
+  btn.classList.add('active');
+  btn.setAttribute('aria-selected', 'true');
+}
+
+// ================================================================
+//  NOTRACE — Photo Metadata Remover
+// ================================================================
+
+const store        = new Map();
+let uid            = 0;
+let isProcessing   = false;
+
+const $ = id => document.getElementById(id);
+
+const dropZone       = $('dropZone');
+const fileInput      = $('fileInput');
+const browseLink     = $('browseLink');
+const queueWrap      = $('queueWrap');
+const fileList       = $('fileList');
+const queueLabel     = $('queueLabel');
+const cleanBtn       = $('cleanBtn');
+const downloadAllBtn = $('downloadAllBtn');
+const clearBtn       = $('clearBtn');
+const progressWrap   = $('progressWrap');
+const progressFill   = $('progressFill');
+
+browseLink.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('click', e => { if (e.target !== browseLink) fileInput.click(); });
+fileInput.addEventListener('change', () => { ingest(Array.from(fileInput.files)); fileInput.value = ''; });
+
+dropZone.addEventListener('dragenter', e => { e.preventDefault(); dropZone.classList.add('dragging'); });
+dropZone.addEventListener('dragover',  e => { e.preventDefault(); });
+dropZone.addEventListener('dragleave', e => { if (!dropZone.contains(e.relatedTarget)) dropZone.classList.remove('dragging'); });
+dropZone.addEventListener('drop', e => {
+  e.preventDefault(); dropZone.classList.remove('dragging');
+  const imgs = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/') || /\.(heic|heif|avif)$/i.test(f.name));
+  if (imgs.length) ingest(imgs);
+});
+
+function ingest(files) {
+  files.forEach(file => { const id = ++uid; store.set(id, { file, blob: null, name: file.name, status: 'pending' }); renderCard(id); probeMetadata(id); });
+  syncUI();
+}
+
+function renderCard(id) {
+  const { file } = store.get(id);
+  const div = document.createElement('div');
+  div.className = 'file-card'; div.id = `card-${id}`;
+  const thumb = document.createElement('img');
+  thumb.className = 'card-thumb'; thumb.alt = '';
+  const objUrl = URL.createObjectURL(file);
+  thumb.src = objUrl;
+  thumb.onload = () => URL.revokeObjectURL(objUrl);
+  div.innerHTML = `
+    <div class="card-body">
+      <div class="card-name" title="${esc(file.name)}">${esc(file.name)}</div>
+      <div class="card-tags" id="tags-${id}">
+        <span class="tag tag-size">${fmtBytes(file.size)}</span>
+        <span class="tag tag-pending">scanning…</span>
+      </div>
+    </div>
+    <div class="card-actions">
+      <span class="card-status" id="status-${id}">pending</span>
+      <button class="btn-remove" title="Remove" onclick="removeCard(${id})">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>`;
+  div.insertBefore(thumb, div.firstChild);
+  fileList.appendChild(div);
+}
+
+async function probeMetadata(id) {
+  const { file } = store.get(id);
+  const tags = [];
+  try {
+    const chunk = await readBuf(file, 0, 131072);
+    const view = new DataView(chunk);
+    if (view.byteLength >= 4 && view.getUint16(0) === 0xFFD8) {
+      let offset = 2;
+      while (offset + 4 < view.byteLength) {
+        const marker = view.getUint16(offset);
+        if (marker === 0xFFE1) {
+          const segLen = view.getUint16(offset + 2);
+          const seg = new Uint8Array(chunk, offset + 4, Math.min(segLen - 2, chunk.byteLength - offset - 4));
+          const head = String.fromCharCode(...seg.slice(0, 6));
+          if (head.startsWith('Exif')) {
+            if (scanForTag(seg, [0x88, 0x25])) tags.push({ cls: 'tag-gps', label: '📍 GPS' });
+            if (scanForTag(seg, [0x01, 0x0F])) tags.push({ cls: 'tag-device', label: '📷 Device' });
+            if (seg.length > 30) tags.push({ cls: 'tag-exif', label: 'EXIF' });
+          }
+        }
+        if (marker === 0xFFDA) break;
+        const segLen = view.getUint16(offset + 2);
+        offset += 2 + segLen;
+        if (segLen < 2) break;
+      }
+    }
+    if (/\.(heic|heif)$/i.test(file.name) || file.type === 'image/heic') {
+      tags.push({ cls: 'tag-gps', label: '📍 GPS' }, { cls: 'tag-device', label: '📷 Device' }, { cls: 'tag-exif', label: 'EXIF' });
+    }
+    if (file.type === 'image/png' && view.byteLength > 12 && view.getUint32(0) === 0x89504E47) {
+      const bytes = new Uint8Array(chunk, 8);
+      const text = String.fromCharCode(...bytes.slice(0, 200));
+      if (text.includes('tEXt') || text.includes('iTXt') || text.includes('eXIf')) tags.push({ cls: 'tag-exif', label: 'EXIF' });
+    }
+  } catch(e) {}
+  const tagsEl = document.getElementById(`tags-${id}`);
+  if (!tagsEl) return;
+  tagsEl.innerHTML = `<span class="tag tag-size">${fmtBytes(file.size)}</span>`;
+  if (tags.length === 0) tagsEl.innerHTML += `<span class="tag tag-pending">no metadata found</span>`;
+  else tags.forEach(t => { tagsEl.innerHTML += `<span class="tag ${t.cls}">${t.label}</span>`; });
+}
+
+function scanForTag(bytes, tagBytes) {
+  for (let i = 0; i < bytes.length - 1; i++) if (bytes[i] === tagBytes[0] && bytes[i+1] === tagBytes[1]) return true;
+  return false;
+}
+
+cleanBtn.addEventListener('click', async () => {
+  if (isProcessing) return;
+  isProcessing = true; cleanBtn.disabled = true;
+  cleanBtn.innerHTML = '<span class="spinner"></span> Cleaning…';
+  progressWrap.classList.remove('hidden');
+  const pending = [...store.entries()].filter(([, d]) => !d.blob);
+  let done = 0;
+  for (const [id, data] of pending) {
+    setStatus(id, 'working', 'cleaning…');
+    try {
+      const blob = await stripMetadata(data.file);
+      data.blob = blob; data.status = 'done';
+      setStatus(id, 'done', 'clean ✓');
+      markCardDone(id, data);
+    } catch(err) {
+      data.status = 'error';
+      if (err.message === 'HEIC_NOT_SUPPORTED') { setStatus(id, 'error', 'convert to JPEG first'); markCardHeicError(id); }
+      else { setStatus(id, 'error', 'error'); markCardError(id); }
+    }
+    done++;
+    progressFill.style.width = `${(done / pending.length) * 100}%`;
+  }
+  isProcessing = false;
+  cleanBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg> All Done`;
+  downloadAllBtn.disabled = ![...store.values()].some(d => d.blob);
+  setTimeout(() => { progressWrap.classList.add('hidden'); progressFill.style.width = '0%'; }, 1200);
+});
+
+async function stripMetadata(file) {
+  const isHeic = /\.(heic|heif)$/i.test(file.name) || file.type === 'image/heic' || file.type === 'image/heif';
+  if (isHeic) {
+    return new Promise((resolve, reject) => {
+      const img = new Image(); const blobUrl = URL.createObjectURL(file);
+      img.onload = () => { URL.revokeObjectURL(blobUrl); const canvas = document.createElement('canvas'); canvas.width = img.naturalWidth; canvas.height = img.naturalHeight; canvas.getContext('2d').drawImage(img, 0, 0); canvas.toBlob(r => r ? resolve(r) : reject(new Error('HEIC_NOT_SUPPORTED')), 'image/jpeg', 0.95); };
+      img.onerror = () => { URL.revokeObjectURL(blobUrl); reject(new Error('HEIC_NOT_SUPPORTED')); };
+      img.src = blobUrl;
+    });
+  }
+  const isGif = file.type === 'image/gif' || /\.gif$/i.test(file.name);
+  if (isGif) return file.slice(0, file.size, file.type || 'image/gif');
+  let outType = 'image/jpeg', quality = 0.95;
+  if (file.type === 'image/png')  { outType = 'image/png';  quality = undefined; }
+  if (file.type === 'image/webp') { outType = 'image/webp'; quality = 0.95; }
+  return stripViaCanvas(file, outType, quality);
+}
+
+function stripViaCanvas(blob, outType, quality) {
+  return new Promise((resolve, reject) => {
+    const img = new Image(); const blobUrl = URL.createObjectURL(blob);
+    img.onload = () => { URL.revokeObjectURL(blobUrl); const canvas = document.createElement('canvas'); canvas.width = img.naturalWidth; canvas.height = img.naturalHeight; canvas.getContext('2d').drawImage(img, 0, 0); canvas.toBlob(r => r ? resolve(r) : reject(new Error('Canvas toBlob failed')), outType, quality); };
+    img.onerror = () => { URL.revokeObjectURL(blobUrl); reject(new Error('Image decode failed')); };
+    img.src = blobUrl;
+  });
+}
+
+function setStatus(id, state, text) {
+  const el = $(`status-${id}`); if (!el) return;
+  el.className = `card-status ${state}`;
+  if (state === 'working') el.innerHTML = '<span class="spinner"></span>'; else el.textContent = text;
+}
+
+function markCardDone(id, data) {
+  const card = $(`card-${id}`); if (!card) return;
+  card.classList.add('state-done');
+  const tagsEl = $(`tags-${id}`);
+  if (tagsEl) { const sz = tagsEl.querySelector('.tag-size'); tagsEl.innerHTML = `<span class="tag tag-size">${sz ? sz.textContent : ''}</span><span class="tag tag-clean">✓ Clean · ${fmtBytes(data.blob.size)}</span>`; }
+  const actions = card.querySelector('.card-actions');
+  if (actions && !actions.querySelector('.btn-save')) { const b = document.createElement('button'); b.className = 'btn-save'; b.textContent = '↓ Save'; b.onclick = () => downloadOne(id, id); actions.insertBefore(b, actions.querySelector('.card-status')); }
+}
+
+function markCardError(id) { const c = $(`card-${id}`); if (c) c.classList.add('state-error'); }
+function markCardHeicError(id) {
+  const card = $(`card-${id}`); if (!card) return;
+  card.classList.add('state-error');
+  const tagsEl = $(`tags-${id}`);
+  if (tagsEl) { const sz = tagsEl.querySelector('.tag-size'); tagsEl.innerHTML = `<span class="tag tag-size">${sz ? sz.textContent : ''}</span><span class="tag tag-exif">⚠ HEIC — export as JPEG from Photos app first</span>`; }
+}
+
+function downloadOne(id, index) { const data = store.get(id); if (!data || !data.blob) return; triggerDownload(data.blob, cleanFilename(data.name, index)); }
+
+downloadAllBtn.addEventListener('click', async () => {
+  const cleaned = [...store.entries()].filter(([, d]) => d.blob);
+  if (cleaned.length === 0) return;
+  if (cleaned.length === 1) { downloadOne(cleaned[0][0], 1); return; }
+  let i = 1;
+  for (const [id] of cleaned) { downloadOne(id, i++); await sleep(200); }
+});
+
+function triggerDownload(blob, filename) {
+  const a = document.createElement('a'); const url = URL.createObjectURL(blob);
+  a.href = url; a.download = filename; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 15000);
+}
+
+function cleanFilename(original, index) {
+  const dot = original.lastIndexOf('.');
+  let ext = dot > 0 ? original.slice(dot).toLowerCase() : '.jpg';
+  if (ext === '.heic' || ext === '.heif') ext = '.jpg';
+  return `image_${String(index).padStart(3,'0')}${ext}`;
+}
+
+window.removeCard = function(id) { store.delete(id); const el = $(`card-${id}`); if (el) el.remove(); syncUI(); };
+
+clearBtn.addEventListener('click', () => {
+  store.clear(); fileList.innerHTML = ''; syncUI();
+  cleanBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg> Strip All Metadata`;
+});
+
+function syncUI() {
+  const count = store.size;
+  queueWrap.classList.toggle('hidden', count === 0);
+  queueLabel.textContent = `${count} file${count !== 1 ? 's' : ''}`;
+  cleanBtn.disabled = count === 0 || isProcessing;
+  downloadAllBtn.disabled = ![...store.values()].some(d => d.blob);
+}
+
+function readBuf(file, start, len) {
+  return new Promise((res, rej) => { const r = new FileReader(); r.onload = e => res(e.target.result); r.onerror = () => rej(new Error('FileReader error')); r.readAsArrayBuffer(file.slice(start, start + len)); });
+}
+
+function fmtBytes(b) { if (b < 1024) return `${b}B`; if (b < 1048576) return `${(b/1024).toFixed(1)}KB`; return `${(b/1048576).toFixed(1)}MB`; }
+function esc(str) { return str.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ================================================================
+//  NOTRACK — URL Tracking Parameter Stripper
+// ================================================================
+
+// 190+ tracking parameters. Exact matches only — non-tracking
+// query parameters are preserved unchanged.
+const TRACKING_PARAMS = new Set([
+  // Google
+  'gclid','gclsrc','gbraid','wbraid','dclid','srsltid','_ga','_gl','_gac',
+  'sca_esv','sxsrf','ei','ved','sa','biw','bih','gs_lcp','sclient','oq','aqs',
+  // Meta / Facebook
+  'fbclid','fb_action_ids','fb_action_types','fb_ref','fb_source','fbc','fbp','fb_beacon_info',
+  // UTM (universal)
+  'utm_source','utm_medium','utm_campaign','utm_content','utm_term','utm_id',
+  'utm_reader','utm_place','utm_pubreferrer','utm_swu','utm_viz_id','utm_referrer',
+  'utm_cid','utm_name','utm_social','utm_social-type','utm_brand','utm_keyword',
+  // Microsoft
+  'msclkid',
+  // Twitter / X
+  'twclid','twsrc','twgr','twcamp','twcon','twterm',
+  // TikTok
+  'ttclid','tt_medium','tt_content','_d','share_app_id','share_item_id','share_link_id',
+  // YouTube
+  'si','pp','ab_channel','feature',
+  // Spotify
+  'nd',
+  // LinkedIn
+  'li_fat_id','li_lean_id','trackingId','refId','trk',
+  // Instagram
+  'igshid','ig_mid','ig_rid',
+  // Pinterest
+  'epik',
+  // Snapchat
+  'sccid','ScCid',
+  // Reddit
+  'correlation_id','ref_campaign','ref_source',
+  // Mailchimp
+  'mc_eid','mc_cid',
+  // HubSpot
+  '_hsenc','_hsmi','__hstc','__hssc','__hsfp',
+  'hsa_cam','hsa_grp','hsa_mt','hsa_src','hsa_ad','hsa_acc','hsa_net',
+  // Marketo
+  'mkt_tok',
+  // Klaviyo
+  '_kx',
+  // Drip
+  '__s',
+  // Braze / Branch
+  '_branch_match_id','_bta_tid','_bta_c',
+  // Piwik / Matomo
+  'pk_campaign','pk_keyword','pk_source','pk_medium','pk_cid','pk_content',
+  'mtm_campaign','mtm_source','mtm_medium','mtm_keyword','mtm_cid','mtm_content',
+  // Yandex
+  'yclid','_openstat','ym_uid','ym_did',
+  // Adobe / Omniture
+  's_cid','s_kwcid','cid','cmpid','ef_id',
+  // Amazon
+  'tag','linkCode','linkId','pf_rd_p','pf_rd_r','pd_rd_r','pd_rd_w',
+  'content-id','pd_rd_wg','ref_',
+  // Apple
+  'pt','ct','mt',
+  // Outbrain
+  'obOrigUrl','OutbrainClickId',
+  // Taboola
+  'tblci',
+  // General
+  'ref','source','click_id','campaign_id','ad_id','zanpid',
+  'irclickid','irgwc','wickedid','cjevent','cjdata',
+]);
+
+// Source labels for known prefixes
+const PARAM_SOURCE = {
+  'gclid':'Google','gbraid':'Google','wbraid':'Google','dclid':'Google','srsltid':'Google','_ga':'Google','_gl':'Google',
+  'fbclid':'Facebook','fbc':'Facebook','fbp':'Facebook',
+  'utm_source':'UTM','utm_medium':'UTM','utm_campaign':'UTM','utm_content':'UTM','utm_term':'UTM','utm_id':'UTM',
+  'msclkid':'Microsoft',
+  'twclid':'Twitter/X','twsrc':'Twitter/X','twgr':'Twitter/X','twcamp':'Twitter/X',
+  'ttclid':'TikTok',
+  'li_fat_id':'LinkedIn','li_lean_id':'LinkedIn','trk':'LinkedIn',
+  'igshid':'Instagram','ig_mid':'Instagram',
+  'epik':'Pinterest','sccid':'Snapchat','ScCid':'Snapchat',
+  'mc_eid':'Mailchimp','mc_cid':'Mailchimp',
+  '_hsenc':'HubSpot','_hsmi':'HubSpot','__hstc':'HubSpot','hsa_cam':'HubSpot',
+  'mkt_tok':'Marketo','_kx':'Klaviyo','__s':'Drip',
+  'yclid':'Yandex','s_kwcid':'Adobe',
+  'tag':'Amazon','pf_rd_p':'Amazon','ref_':'Amazon',
+  'tblci':'Taboola','OutbrainClickId':'Outbrain',
+};
+
+function getSource(key) {
+  if (PARAM_SOURCE[key]) return PARAM_SOURCE[key];
+  if (key.startsWith('utm_')) return 'UTM';
+  if (key.startsWith('hsa_')) return 'HubSpot';
+  if (key.startsWith('mtm_')) return 'Matomo';
+  if (key.startsWith('pk_'))  return 'Piwik';
+  return 'Tracker';
+}
+
+let currentCleanUrl = '';
+
+function stripUrl(raw) {
+  raw = raw.trim();
+  if (!raw) return null;
+  // Attempt to parse — prepend https:// if no scheme
+  let url;
+  try { url = new URL(raw); }
+  catch(e) {
+    try { url = new URL('https://' + raw); }
+    catch(e2) { return null; }
+  }
+
+  const removed = [];
+  const kept    = new URLSearchParams();
+
+  for (const [key, val] of url.searchParams) {
+    if (TRACKING_PARAMS.has(key) || key.startsWith('utm_') || key.startsWith('hsa_') || key.startsWith('mtm_') || key.startsWith('pk_')) {
+      removed.push({ key, val, source: getSource(key) });
+    } else {
+      kept.append(key, val);
+    }
+  }
+
+  url.search = kept.toString();
+  // Remove trailing ? if no params remain
+  const clean = url.toString().replace(/\?$/, '');
+
+  return { clean, removed, total: removed.length + [...kept.keys()].length };
+}
+
+const urlInput = $('urlInput');
+
+urlInput.addEventListener('input', () => { processUrl(urlInput.value); });
+urlInput.addEventListener('paste', () => { setTimeout(() => processUrl(urlInput.value), 10); });
+
+async function pasteUrl() {
+  try { const t = await navigator.clipboard.readText(); urlInput.value = t; processUrl(t); }
+  catch(e) { urlInput.focus(); }
+}
+
+function processUrl(raw) {
+  if (!raw.trim()) { clearUrl(); return; }
+  const result = stripUrl(raw);
+  if (!result) {
+    $('urlOutputWrap').classList.remove('visible');
+    $('urlStatsRow').style.display = 'none';
+    $('urlRemovedList').classList.remove('visible');
+    $('urlCopyBtn').disabled = true;
+    $('urlOpenBtn').disabled = true;
+    currentCleanUrl = '';
+    return;
+  }
+
+  currentCleanUrl = result.clean;
+  $('urlOutputText').textContent = result.clean;
+  $('urlOutputWrap').classList.add('visible');
+  $('statRemoved').textContent = result.removed.length;
+  $('statTotal').textContent   = result.total;
+  $('statCleanPill').style.display = result.removed.length === 0 ? 'flex' : 'none';
+  $('urlStatsRow').style.display = 'flex';
+  $('urlCopyBtn').disabled = false;
+  $('urlOpenBtn').disabled = false;
+
+  if (result.removed.length > 0) {
+    $('urlRemovedItems').innerHTML = result.removed.map(r =>
+      `<div class="url-removed-item">
+        <span class="url-removed-key">${esc(r.key)}</span>
+        <span class="url-removed-val" title="${esc(r.val)}">${esc(r.val)}</span>
+        <span class="url-removed-source">${esc(r.source)}</span>
+      </div>`
+    ).join('');
+    $('urlRemovedList').classList.add('visible');
+  } else {
+    $('urlRemovedList').classList.remove('visible');
+  }
+}
+
+function copyCleanUrl() {
+  if (!currentCleanUrl) return;
+  navigator.clipboard.writeText(currentCleanUrl).then(() => {
+    const btn = $('urlCopyBtn');
+    const orig = btn.textContent;
+    btn.textContent = 'Copied ✓';
+    setTimeout(() => { btn.textContent = orig; }, 1800);
+  });
+}
+
+function openCleanUrl() {
+  if (!currentCleanUrl) return;
+  window.open(currentCleanUrl, '_blank', 'noopener,noreferrer');
+}
+
+function clearUrl() {
+  urlInput.value = '';
+  currentCleanUrl = '';
+  $('urlOutputWrap').classList.remove('visible');
+  $('urlStatsRow').style.display = 'none';
+  $('urlRemovedList').classList.remove('visible');
+  $('urlCopyBtn').disabled = true;
+  $('urlOpenBtn').disabled = true;
+}
+
+// ================================================================
+//  NOSEARCH — Private DuckDuckGo Search
+// ================================================================
+
+function doSearch() {
+  const q = $('searchInput').value.trim();
+  if (!q) return;
+  window.open('https://duckduckgo.com/?q=' + encodeURIComponent(q) + '&kp=-2', '_blank', 'noopener,noreferrer');
+}
+
+$('searchInput').addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+</script>
+
+</body>
+</html>
