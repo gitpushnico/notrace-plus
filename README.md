@@ -74,4 +74,9 @@ One common setup:
 This project is **open source** so anyone can inspect the code, verify the privacy claims, and fork/host their own version.
 
 - **License**: MIT
+- **Font licenses**: SIL Open Font License 1.1 (see `fonts/OFL-DMMono.txt` and `fonts/OFL-Unbounded.txt`)
+
+## Compliance docs
+- `PRIVACY.md` — project privacy notice
+- `THIRD_PARTY_NOTICE.md` — third-party assets and runtime behavior
 
