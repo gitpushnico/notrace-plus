@@ -78,5 +78,8 @@ This project is **open source** so anyone can inspect the code, verify the priva
 
 ## Compliance docs
 - `PRIVACY.md` — project privacy notice
-- `THIRD_PARTY_NOTICE.md` — third-party assets and runtime behavior
+- `THIRD_PARTY_NOTICE.md` — third-party assets, runtime behavior, and trademark notes (including GitHub Invertocat use)
+
+## Trademarks
+GitHub and the Invertocat logo are trademarks of GitHub, Inc. This project is not affiliated with GitHub. Details: `THIRD_PARTY_NOTICE.md` and [GitHub Brand Toolkit – Logo](https://brand.github.com/foundations/logo).
 

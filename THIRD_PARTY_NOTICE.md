@@ -25,6 +25,20 @@ Upstream pages:
 - Unbounded: https://fonts.google.com/specimen/Unbounded
 - Unbounded license: https://fonts.google.com/specimen/Unbounded/license
 
+### GitHub Invertocat (trademark)
+
+This project includes the GitHub **Invertocat** mark as a local SVG asset:
+
+- `icons/GitHub_Invertocat_White.svg`
+
+**Permitted use in this project:** the mark is used only as a **visual link** to the open-source repository hosted on GitHub (`https://github.com/gitpushnico/notrace-plus`), consistent with GitHub’s guidance for linking to GitHub and using the mark as a social/project link. See GitHub’s [Logo – Brand Toolkit](https://brand.github.com/foundations/logo).
+
+**No affiliation:** NoTrace+ is an independent open-source project. **GitHub, Inc. is not affiliated with, sponsors, or endorses** this project. Any use of GitHub trademarks is for identification and linking only.
+
+**Trademarks:** GITHUB®, the GITHUB® logo design, the INVERTOCAT logo design, OCTOCAT®, and related marks are trademarks of **GitHub, Inc.** All rights reserved by their respective owners.
+
+If GitHub’s published guidelines change, this project’s use of the mark will be reviewed and updated accordingly.
+
 ## Runtime Third-Party Behavior
 
 On first page load, this site is intended to avoid third-party tracking behavior:

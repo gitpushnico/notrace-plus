@@ -26,6 +26,10 @@ NoTrace+ does not intentionally set non-essential tracking cookies for analytics
 - Some links and tools can open external websites only after user interaction.
 - If you use the search feature, your query is sent to DuckDuckGo and DuckDuckGo will receive your IP address, as with any direct web request.
 
+## Trademarks (GitHub)
+
+The site may display the GitHub **Invertocat** mark solely to link to this project’s source repository on GitHub. **GitHub, Inc. is not affiliated with this project** and does not endorse it. See `THIRD_PARTY_NOTICE.md` and GitHub’s [Logo – Brand Toolkit](https://brand.github.com/foundations/logo) for context.
+
 ## Security and transmission controls
 
 The project includes browser security headers via `vercel.json`, including restrictive Content Security Policy directives intended to minimize outbound connections.
