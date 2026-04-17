@@ -568,26 +568,26 @@
     .header-val  { font-size: 10px; color: var(--text-dim); font-style: italic; word-break: break-all; }
 
     /* ── Footer ── */
-    footer {
-      margin-top: 56px; padding-top: 24px; border-top: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: space-between;
-      flex-wrap: wrap; gap: 12px 20px;
-    }
-    .footer-left {
-      flex: 1 1 auto;
-      min-width: 0;
-      font-size: 11px;
-      color: var(--text-dim);
+    .footer-meta {
+      margin-top: 56px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
       display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 6px;
+      flex-direction: column;
+      gap: 8px;
+      color: var(--text-dim);
       transition: color 0.15s ease;
     }
-    .footer-right {
-      flex: 0 0 auto;
-      display: flex; align-items: center; justify-content: flex-end;
-      margin-left: auto;
+    .footer-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px 16px;
+      min-width: 0;
+    }
+    .footer-copy {
+      font-size: 11px;
+      min-width: 0;
     }
     .footer-link {
       font-size: 10px; color: var(--text-dim); text-decoration: none;
@@ -613,17 +613,21 @@
       display: block;
     }
     .footer-privacy {
+      display: block;
       width: 100%;
       font-size: 10px;
       color: currentColor;
       opacity: 0.88;
+      line-height: 1.65;
       transition: opacity 0.15s ease;
     }
 
-    .footer-left:hover {
+    .footer-meta:has(.footer-top:hover):not(:has(.footer-github:hover)):not(:has(.footer-github:focus-visible)),
+    .footer-meta:has(.footer-privacy:hover) {
       color: var(--text-mid);
     }
-    .footer-left:hover .footer-privacy {
+    .footer-meta:has(.footer-top:hover):not(:has(.footer-github:hover)):not(:has(.footer-github:focus-visible)) .footer-privacy,
+    .footer-meta:has(.footer-privacy:hover) .footer-privacy {
       opacity: 1;
     }
     .footer-github:hover,
@@ -1209,16 +1213,14 @@
   <!-- ══════════════════════════════════════════════════
        FOOTER
   ══════════════════════════════════════════════════ -->
-  <footer>
-    <div class="footer-left">
-      <span>© 2026 NoTrace+ · MIT License</span>
-      <span class="footer-privacy">No tracking cookies. No third-party analytics scripts. Browser-first processing only.</span>
-    </div>
-    <div class="footer-right">
+  <footer class="footer-meta">
+    <div class="footer-top">
+      <span class="footer-copy">© 2026 NoTrace+ · MIT License</span>
       <a class="footer-github" href="https://github.com/gitpushnico/notrace-plus" target="_blank" rel="noopener noreferrer" aria-label="NoTrace+ on GitHub">
         <img src="icons/GitHub_Invertocat_White.svg" alt="" width="22" height="21" decoding="async">
       </a>
     </div>
+    <span class="footer-privacy">No tracking cookies. No third-party analytics scripts. Browser-first processing only.</span>
   </footer>
 
 </div><!-- /page -->
