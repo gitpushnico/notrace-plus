@@ -26,10 +26,6 @@
   <link rel="icon" type="image/png" href="favicon/favicon-32x32.png" sizes="32x32">
   <link rel="apple-touch-icon" href="favicon/apple-touch-icon-180.png" sizes="180x180">
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Unbounded:wght@400;600;700;900&display=swap" rel="stylesheet">
-
   <title>NoTrace+</title>
 
   <script>
@@ -40,6 +36,49 @@
   </script>
 
   <style>
+    @font-face {
+      font-family: 'DM Mono';
+      src: url('/fonts/DMMono-Regular.ttf') format('truetype');
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'DM Mono';
+      src: url('/fonts/DMMono-Medium.ttf') format('truetype');
+      font-weight: 500;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'Unbounded';
+      src: url('/fonts/Unbounded-Regular.ttf') format('truetype');
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'Unbounded';
+      src: url('/fonts/Unbounded-SemiBold.ttf') format('truetype');
+      font-weight: 600;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'Unbounded';
+      src: url('/fonts/Unbounded-Bold.ttf') format('truetype');
+      font-weight: 700;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'Unbounded';
+      src: url('/fonts/Unbounded-Black.ttf') format('truetype');
+      font-weight: 900;
+      font-style: normal;
+      font-display: swap;
+    }
+
     :root {
       --bg:          #050505;
       --surface:     #0d0d0d;
@@ -550,6 +589,12 @@
       letter-spacing: 0.5px; transition: color 0.15s;
     }
     .footer-link:hover { color: var(--accent); }
+    .footer-privacy {
+      width: 100%;
+      font-size: 10px;
+      color: var(--text-dim);
+      opacity: 0.9;
+    }
 
     /* ── Animations ── */
     @keyframes fadeUp {
@@ -1132,6 +1177,7 @@
   <footer>
     <div class="footer-left">
       <span>© 2026 NoTrace+ · MIT License</span>
+      <span class="footer-privacy">No tracking cookies. No third-party analytics scripts. Browser-first processing only.</span>
     </div>
     <div class="footer-right">
       <a class="footer-link" href="https://github.com/gitpushnico/notrace-plus" target="_blank" rel="noopener noreferrer">GitHub</a>
