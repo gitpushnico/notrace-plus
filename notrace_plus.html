@@ -915,8 +915,8 @@
         <span class="stat-lbl">total parameters</span>
       </div>
       <div class="url-stat-pill" id="statCleanPill" style="display:none">
-        <span class="stat-num" style="color:var(--accent)">✓</span>
-        <span class="stat-lbl">already clean</span>
+        <span class="stat-num" id="statCleanIcon" style="color:var(--accent)">✓</span>
+        <span class="stat-lbl" id="statCleanLbl">already clean</span>
       </div>
     </div>
 
@@ -1566,6 +1566,7 @@ const PARAM_SOURCE = {
   'utm_source':'UTM','utm_medium':'UTM','utm_campaign':'UTM','utm_content':'UTM','utm_term':'UTM','utm_id':'UTM',
   'msclkid':'Microsoft',
   'twclid':'Twitter/X','twsrc':'Twitter/X','twgr':'Twitter/X','twcamp':'Twitter/X',
+  's':'Twitter/X','t':'Twitter/X',
   'ttclid':'TikTok',
   'li_fat_id':'LinkedIn','li_lean_id':'LinkedIn','trk':'LinkedIn',
   'igshid':'Instagram','ig_mid':'Instagram',
@@ -1587,6 +1588,23 @@ function getSource(key) {
   return 'Tracker';
 }
 
+// X / Twitter share links: short keys `s` and `t` are stripped ONLY on these hosts
+// (never globally — they are too ambiguous on other domains).
+const TWITTER_X_HOSTS = new Set(['x.com', 'twitter.com', 'mobile.twitter.com', 't.co']);
+const TWITTER_X_SHORT_TRACKING_KEYS = new Set(['s', 't']);
+
+function normalizeHostname(hostname) {
+  return String(hostname || '').replace(/^www\./i, '').toLowerCase();
+}
+
+function isTwitterXHost(hostname) {
+  return TWITTER_X_HOSTS.has(normalizeHostname(hostname));
+}
+
+function isTwitterXShortTrackingParam(hostname, key) {
+  return isTwitterXHost(hostname) && TWITTER_X_SHORT_TRACKING_KEYS.has(key);
+}
+
 let currentCleanUrl = '';
 
 function stripUrl(raw) {
@@ -1604,7 +1622,14 @@ function stripUrl(raw) {
   const kept    = new URLSearchParams();
 
   for (const [key, val] of url.searchParams) {
-    if (TRACKING_PARAMS.has(key) || key.startsWith('utm_') || key.startsWith('hsa_') || key.startsWith('mtm_') || key.startsWith('pk_')) {
+    if (
+      TRACKING_PARAMS.has(key) ||
+      key.startsWith('utm_') ||
+      key.startsWith('hsa_') ||
+      key.startsWith('mtm_') ||
+      key.startsWith('pk_') ||
+      isTwitterXShortTrackingParam(url.hostname, key)
+    ) {
       removed.push({ key, val, source: getSource(key) });
     } else {
       kept.append(key, val);
@@ -1646,7 +1671,23 @@ function processUrl(raw) {
   $('urlOutputWrap').classList.add('visible');
   $('statRemoved').textContent = result.removed.length;
   $('statTotal').textContent   = result.total;
-  $('statCleanPill').style.display = result.removed.length === 0 ? 'flex' : 'none';
+  const cleanPill = $('statCleanPill');
+  const cleanIcon = $('statCleanIcon');
+  const cleanLbl = $('statCleanLbl');
+  if (result.removed.length === 0) {
+    cleanPill.style.display = 'flex';
+    if (result.total > 0) {
+      cleanIcon.textContent = '—';
+      cleanIcon.style.color = 'var(--text-dim)';
+      cleanLbl.textContent = 'no known tracking parameters matched';
+    } else {
+      cleanIcon.textContent = '✓';
+      cleanIcon.style.color = 'var(--accent)';
+      cleanLbl.textContent = 'already clean';
+    }
+  } else {
+    cleanPill.style.display = 'none';
+  }
   $('urlStatsRow').style.display = 'flex';
   $('urlCopyBtn').disabled = false;
   $('urlOpenBtn').disabled = false;
