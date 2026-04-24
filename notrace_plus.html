@@ -97,6 +97,13 @@
       --radius:      10px;
       --mono:        'DM Mono', monospace;
       --display:     'Unbounded', sans-serif;
+      --scanline: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.03) 2px,
+        rgba(0, 0, 0, 0.03) 4px
+      );
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -475,7 +482,7 @@
     .search-input::placeholder { color: var(--text-dim); }
     .search-go-btn {
       background: var(--accent); color: #050505; border: none;
-      font-family: var(--display); font-weight: 700; font-size: 11px;
+      font-family: var(--mono); font-weight: 500; font-size: 11px;
       padding: 8px 16px; border-radius: 7px; cursor: pointer;
       letter-spacing: 0.3px; transition: all 0.15s; flex-shrink: 0;
     }
@@ -545,7 +552,11 @@
     .strip-item-name { font-size: 11px; color: var(--text); margin-bottom: 2px; }
     .strip-item-eg   { font-size: 10px; color: var(--text-dim); font-style: italic; }
 
-    .headers-list { display: flex; flex-direction: column; gap: 5px; }
+    .headers-list {
+      display: flex; flex-direction: column; gap: 5px;
+      container-type: inline-size;
+      container-name: headers;
+    }
     .header-row {
       display: flex; gap: 12px; padding: 8px 12px;
       background: var(--surface2); border: 1px solid var(--border);
@@ -622,31 +633,45 @@
       opacity: 0.7;
     }
 
-    /* Component-level scanline texture (not global) */
+    /*
+     * Scanline on components only (not global). Must list states that use
+     * `background:` shorthand — shorthand resets background-image unless
+     * we re-apply it with equal or higher specificity (e.g. :hover, :disabled).
+     */
     .tool-nav,
     .tool-tab,
+    .tool-tab:hover,
+    .tool-tab.active,
     .trust-pill,
     .file-card,
     .btn-ghost,
     .btn-save,
+    .btn-save:hover,
     .btn-primary,
+    .btn-primary:hover,
+    .btn-primary:disabled,
     .btn-secondary,
+    .btn-secondary:hover,
+    .btn-secondary:disabled,
     .url-input,
+    .url-input:focus,
     .url-paste-btn,
+    .url-paste-btn:hover,
     .url-output-wrap,
     .url-stat-pill,
     .url-removed-list,
     .url-btn,
+    .url-btn:hover,
+    .url-btn:disabled,
+    .url-btn.primary-url,
+    .url-btn.primary-url:hover,
+    .url-btn.primary-url:disabled,
     .search-box,
+    .search-box:focus-within,
     .search-go-btn,
+    .search-go-btn:hover,
     .panel {
-      background-image: repeating-linear-gradient(
-        0deg,
-        transparent,
-        transparent 2px,
-        rgba(0, 0, 0, 0.03) 2px,
-        rgba(0, 0, 0, 0.03) 4px
-      );
+      background-image: var(--scanline);
     }
 
     /* ── Animations ── */
@@ -657,6 +682,44 @@
 
     .hidden { display: none !important; }
 
+    /*
+     * Security header rows: stack key above value when the list column is narrow
+     * (container query), and on narrow viewports for browsers without @container.
+     */
+    @container headers (max-width: 700px) {
+      .header-row {
+        flex-direction: column;
+        align-items: stretch;
+        flex-wrap: nowrap;
+        gap: 4px;
+      }
+      .header-key,
+      .header-val {
+        display: block;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+      }
+      .header-key { flex-shrink: 0; }
+    }
+
+    @media (max-width: 768px) {
+      .header-row {
+        flex-direction: column;
+        align-items: stretch;
+        flex-wrap: nowrap;
+        gap: 4px;
+      }
+      .header-key,
+      .header-val {
+        display: block;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+      }
+      .header-key { flex-shrink: 0; }
+    }
+
     /* ── Responsive ── */
     @media (max-width: 580px) {
       .page { padding: 32px 16px 48px; }
@@ -664,7 +727,6 @@
       .action-bar { flex-direction: column; }
       .btn-primary, .btn-secondary { width: 100%; }
       .strip-grid { grid-template-columns: 1fr 1fr; }
-      .header-key { min-width: unset; width: 100%; }
       .tool-tab-label { display: none; }
       .url-action-row { flex-direction: column; }
     }
