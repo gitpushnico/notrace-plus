@@ -162,44 +162,37 @@
       color: var(--text-mid);
       font-size: 13px;
       max-width: 420px;
-      margin: 0 auto 40px;
+      margin: 0 auto;
       line-height: 1.8;
       text-align: center;
     }
 
-    /* ── Buttons ── */
-    .btn-primary {
-      background: var(--accent);
-      color: #050505;
-      border: none;
-      font-family: var(--display);
-      font-weight: 700;
-      font-size: 13px;
-      letter-spacing: 0.3px;
-      padding: 15px 32px;
-      border-radius: 10px;
-      cursor: pointer;
+    .error-home-hint {
+      margin-top: 10px;
+      max-width: 420px;
+      margin-left: auto;
+      margin-right: auto;
+      font-size: 12px;
+      color: var(--text-mid);
+      line-height: 1.6;
+      text-align: center;
+    }
+
+    .error-home-link {
+      color: var(--accent);
       text-decoration: none;
-      transition: all 0.15s;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
+      border-bottom: 1px solid rgba(184, 255, 87, 0.35);
+      transition: border-color 0.15s ease, color 0.15s ease;
     }
 
-    .btn-primary:hover {
-      background: #c9ff6a;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 20px rgba(184, 255, 87, 0.15);
+    .error-home-link:hover {
+      border-bottom-color: var(--accent);
     }
 
-    .btn-primary:active {
-      transform: translateY(0);
-    }
-
-    .btn-primary svg {
-      width: 16px;
-      height: 16px;
+    .error-home-link:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 3px;
+      border-radius: 2px;
     }
 
     /* ── Animations ── */
@@ -218,7 +211,6 @@
       .error-code { font-size: 100px; }
       .radar-icon-inline { width: 75px; height: 75px; }
       .error-title { font-size: 18px; }
-      .btn-primary { width: 100%; }
     }
   </style>
 </head>
@@ -241,10 +233,9 @@
     <p class="error-desc">
       The page you’re looking for doesn’t exist.
     </p>
-
-    <a href="/" class="btn-primary">
-      Take me back
-    </a>
+    <p class="error-home-hint">
+      <a href="/" class="error-home-link">Go back</a> to the homepage.
+    </p>
   </div>
 
 </body>
