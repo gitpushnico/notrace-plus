@@ -1,6 +1,6 @@
 # Privacy Notice
 
-Last updated: 2026-04-17
+Last updated: 2026-05-21
 
 ## What this site does
 
@@ -9,6 +9,14 @@ NoTrace+ provides in-browser tools to:
 - remove image metadata,
 - strip tracking parameters from URLs,
 - open privacy-focused web search in a new tab.
+
+## Scope and limitations
+
+Each tool addresses one privacy signal in the browser:
+
+- **Photo metadata**: Output images no longer contain EXIF or related metadata, but visual content in the photo may still be identifying.
+- **URL tracking**: Known tracking parameters are removed from URLs, but other tracking methods (cookies, fingerprinting, server-side logging, IP-based identification) are outside this tool’s scope.
+- **Private search**: When you search, your query is sent to DuckDuckGo and DuckDuckGo receives your IP address, as with any direct web request to an external service.
 
 ## Data handling model
 

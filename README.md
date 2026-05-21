@@ -9,7 +9,7 @@ Made by [gitpushnico](https://github.com/gitpushnico).
 
 ## Motivation
 I built NoTrace+ because a lot of people (including me) don’t think about the small privacy steps that add up, like hidden photo metadata and tracking parameters in shared links.
-I wanted a single, simple place to clean both in seconds, and to share practical tips that make privacy feel approachable rather than technical.
+I wanted a single, simple place to clean both in seconds, and to make privacy feel approachable rather than technical.
 
 ## What it does
 NoTrace+ is a small, static, browser-first toolkit:
@@ -29,8 +29,14 @@ NoTrace+ is designed so you can **verify** what it does by reading the source.
 Private Search is still a web search engine workflow:
 
 - Your query **is sent to DuckDuckGo** when you search (that’s unavoidable for any web search).
-- DuckDuckGo will also see your **IP address** (as with any website).
-- If you want to hide your IP from the search engine, use **Tor Browser** or a trusted VPN before searching.
+- DuckDuckGo will also see your **IP address**, as with any direct request to an external service.
+
+## Limitations (what each tool does not do)
+NoTrace+ is scoped to specific browser-side tasks. Each tool reduces one signal, not all tracking or identification:
+
+- **Photo Metadata**: Removing EXIF does not remove identifying content in the image itself (faces, landmarks, vehicle plates, background details).
+- **URL Tracking**: Stripping URL parameters does not block first-party cookies, browser fingerprinting, server-side logging, or IP-based identification.
+- **Private Search**: DuckDuckGo receives your query and IP address when you search, as with any direct request to an external service. NoTrace+ cannot change that.
 
 ## How it works (high level)
 - **Photo Metadata**: reads the image locally, redraws/exports without metadata, and downloads the cleaned file.

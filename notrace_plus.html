@@ -781,13 +781,6 @@
       </svg>
       <span class="tool-tab-label">Private Search</span>
     </button>
-    <button class="tool-tab" role="tab" aria-selected="false" onclick="switchTool('sectips', this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-        <path d="M9 12l2 2 4-4"/>
-      </svg>
-      <span class="tool-tab-label">Security Tips</span>
-    </button>
   </nav>
 
   <!-- ══════════════════════════════════════════════════
@@ -1051,7 +1044,7 @@
             <div class="how-num">!</div>
             <div class="how-text">
               <strong>Tracking parameters are one layer — not the whole picture</strong>
-              <span>Trackers also use first-party cookies, browser fingerprinting, server-side logging, and IP-based identification — none of which are visible in the URL. Stripping tracking parameters reduces one signal. For broader protection, combine this with a content blocker such as <a href="https://ublockorigin.com" target="_blank" rel="noopener noreferrer">uBlock Origin</a> and a privacy-respecting DNS resolver.</span>
+              <span>Trackers also use first-party cookies, browser fingerprinting, server-side logging, and IP-based identification — none of which are visible in the URL. Stripping tracking parameters reduces one signal, not all tracking.</span>
             </div>
           </div>
         </div>
@@ -1175,67 +1168,13 @@
             <div class="how-num">!</div>
             <div class="how-text">
               <strong>DuckDuckGo still receives your search term and IP address</strong>
-              <span>This is an inherent limitation of any web-based search engine. NoTrace+ cannot change this. To prevent your IP from being seen by the search engine, route your traffic through <a href="https://www.torproject.org" target="_blank" rel="noopener noreferrer">Tor Browser</a> or a trusted VPN such as <a href="https://mullvad.net" target="_blank" rel="noopener noreferrer">Mullvad</a> before searching. Mullvad accepts anonymous payment (cash, Monero) and keeps no logs.</span>
+              <span>This is an inherent limitation of any web-based search engine. NoTrace+ cannot change this. When you search, DuckDuckGo receives your query and IP address, as with any direct request to an external service.</span>
             </div>
           </div>
         </div>
       </div>
     </div>
   </div><!-- /nosearch -->
-
-  <!-- ══════════════════════════════════════════════════
-       TOOL 4: Security Tips
-  ══════════════════════════════════════════════════ -->
-  <div id="panel-sectips" class="tool-panel">
-    <div class="panel">
-      <div class="panel-head">
-        <img src="icons/privacy.png" alt="" class="panel-icon-lg">
-        <div class="panel-head-text">
-          <div class="panel-head-title">Privacy this page can't do alone</div>
-          <div class="panel-head-sub">Your IP, trackers outside the browser, fingerprints, and secure messaging — each needs its own tools. Practical tips below.</div>
-        </div>
-      </div>
-      <div class="panel-body">
-        <div class="how-list">
-          <div class="how-item">
-            <div class="how-num">1</div>
-            <div class="how-text">
-              <strong>Hide your IP address — use Tor Browser or a VPN</strong>
-              <span>Every request you make reveals your IP to the destination server. <a href="https://www.torproject.org" target="_blank" rel="noopener noreferrer">Tor Browser</a> routes your traffic through three relays so no single party knows both who you are and what you requested. <a href="https://mullvad.net" target="_blank" rel="noopener noreferrer">Mullvad VPN</a> is a well-audited alternative — no accounts, no logs, accepts anonymous payment.</span>
-            </div>
-          </div>
-          <div class="how-item">
-            <div class="how-num">2</div>
-            <div class="how-text">
-              <strong>Block trackers at the network level — use a DNS resolver</strong>
-              <span><a href="https://mullvad.net/en/help/dns-over-https-and-dns-over-tls" target="_blank" rel="noopener noreferrer">Mullvad DNS</a> and <a href="https://nextdns.io" target="_blank" rel="noopener noreferrer">NextDNS</a> block tracking domains before a connection is made — covering ads, telemetry, and malware domains across all apps on your device, not just in the browser.</span>
-            </div>
-          </div>
-          <div class="how-item">
-            <div class="how-num">3</div>
-            <div class="how-text">
-              <strong>Prevent browser fingerprinting — use Tor Browser or Firefox with arkenfox</strong>
-              <span>Even without cookies, browsers leak a unique fingerprint through screen size, fonts, canvas rendering, and dozens of other signals. <a href="https://www.torproject.org" target="_blank" rel="noopener noreferrer">Tor Browser</a> standardises these values across all users. <a href="https://github.com/arkenfox/user.js" target="_blank" rel="noopener noreferrer">arkenfox user.js</a> hardens Firefox towards the same goal.</span>
-            </div>
-          </div>
-          <div class="how-item">
-            <div class="how-num">4</div>
-            <div class="how-text">
-              <strong>Encrypted email — use Proton Mail or Tuta</strong>
-              <span><a href="https://proton.me" target="_blank" rel="noopener noreferrer">Proton Mail</a> and <a href="https://tuta.com" target="_blank" rel="noopener noreferrer">Tuta</a> store mail encrypted at rest. Neither can read your messages. Both are open source and independently audited. Note that encryption only applies end-to-end when both sender and recipient use a compatible provider.</span>
-            </div>
-          </div>
-          <div class="how-item">
-            <div class="how-num">5</div>
-            <div class="how-text">
-              <strong>Encrypted messaging — use Signal</strong>
-              <span><a href="https://signal.org" target="_blank" rel="noopener noreferrer">Signal</a> uses end-to-end encryption by default for all messages and calls. The Signal Protocol is open source and has been independently audited. Signal collects no message content, no metadata about who you message, and no call logs.</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div><!-- /sectips -->
 
   <!-- ══════════════════════════════════════════════════
        SHARED: Security Headers
