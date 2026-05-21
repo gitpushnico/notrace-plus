@@ -1,6 +1,6 @@
 # Third-Party Notice
 
-Last updated: 2026-04-17
+Last updated: 2026-05-21
 
 This project is designed to run browser-first with no third-party analytics, no ad pixels, and no tracking cookies on first page load.
 

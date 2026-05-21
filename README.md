@@ -1,5 +1,5 @@
 # NoTrace+
-Three privacy tools in one: strip photo metadata, remove tracking parameters from URLs, and search privately.
+Two in-browser privacy tools plus a DuckDuckGo search shortcut: strip photo metadata and remove tracking parameters from URLs.
 
 Live: `https://notrace.plus` (Vercel)
 
@@ -9,14 +9,14 @@ Made by [gitpushnico](https://github.com/gitpushnico).
 
 ## Motivation
 I built NoTrace+ because a lot of people (including me) don’t think about the small privacy steps that add up, like hidden photo metadata and tracking parameters in shared links.
-I wanted a single, simple place to clean both in seconds, and to make privacy feel approachable rather than technical.
+I wanted a single, simple place to handle those in seconds, and to make privacy feel approachable rather than technical.
 
 ## What it does
-NoTrace+ is a small, static, browser-first toolkit:
+NoTrace+ is a small, static, browser-first site:
 
-- **Photo Metadata**: removes EXIF / metadata from images and exports a clean copy.
-- **URL Tracking**: removes common tracking parameters from URLs (UTM, click IDs, etc.) while preserving meaningful parameters.
-- **Private Search**: opens DuckDuckGo searches in a new tab with privacy-focused settings.
+- **Photo Metadata** (tool): removes EXIF / metadata from images and exports a clean copy — processed entirely in your browser.
+- **URL Tracking** (tool): removes common tracking parameters from URLs (UTM, click IDs, etc.) while preserving meaningful parameters — processed entirely in your browser.
+- **Search** (shortcut): opens DuckDuckGo in a new tab with privacy-focused URL settings (less profiling, not invisibility). NoTrace+ does not log your query.
 
 ## Privacy model (what’s true, precisely)
 NoTrace+ is designed so you can **verify** what it does by reading the source.
@@ -25,23 +25,24 @@ NoTrace+ is designed so you can **verify** what it does by reading the source.
 - **We don’t receive your files or URLs**: photo processing and URL cleaning happen in your browser.
 - **No analytics / no trackers**: no cookies, pixels, or third‑party analytics scripts are included.
 
-### About “Private Search”
-Private Search is still a web search engine workflow:
+### About search
+Search is a shortcut, not a third processing tool:
 
-- Your query **is sent to DuckDuckGo** when you search (that’s unavoidable for any web search).
+- Your query **is sent to DuckDuckGo** when you click Search (that’s unavoidable for any web search).
 - DuckDuckGo will also see your **IP address**, as with any direct request to an external service.
+- NoTrace+ does not store or log what you type.
 
-## Limitations (what each tool does not do)
-NoTrace+ is scoped to specific browser-side tasks. Each tool reduces one signal, not all tracking or identification:
+## Limitations (what each part does not do)
+NoTrace+ is scoped to specific browser-side tasks. Each part reduces one signal, not all tracking or identification:
 
 - **Photo Metadata**: Removing EXIF does not remove identifying content in the image itself (faces, landmarks, vehicle plates, background details).
 - **URL Tracking**: Stripping URL parameters does not block first-party cookies, browser fingerprinting, server-side logging, or IP-based identification.
-- **Private Search**: DuckDuckGo receives your query and IP address when you search, as with any direct request to an external service. NoTrace+ cannot change that.
+- **Search**: DuckDuckGo receives your query and IP address when you search, as with any direct request to an external service. NoTrace+ cannot change that.
 
 ## How it works (high level)
 - **Photo Metadata**: reads the image locally, redraws/exports without metadata, and downloads the cleaned file.
 - **URL Tracking**: parses the URL and removes known tracking keys; non-tracking parameters remain.
-- **Private Search**: creates a DuckDuckGo URL and opens it in a new tab.
+- **Search**: builds a DuckDuckGo URL and opens it in a new tab when you click Search.
 
 ## Project structure
 This repo is intentionally lightweight:
@@ -88,4 +89,3 @@ This project is **open source** so anyone can inspect the code, verify the priva
 
 ## Trademarks
 GitHub and the Invertocat logo are trademarks of GitHub, Inc. This project is not affiliated with GitHub. Details: `THIRD_PARTY_NOTICE.md` and [GitHub Brand Toolkit – Logo](https://brand.github.com/foundations/logo).
-

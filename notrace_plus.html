@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="NoTrace+ — Strip photo metadata, tracking URLs, and search privately. Runs in your browser; nothing sent to our servers; search opens DuckDuckGo when you choose.">
+  <meta name="description" content="NoTrace+ — Two in-browser privacy tools plus a DuckDuckGo search shortcut. Strip photo metadata and URL tracking params locally; we never receive your files or URLs.">
   <meta name="theme-color" content="#050505">
 
   <link rel="canonical" href="https://notrace.plus/">
 
   <meta property="og:site_name" content="NoTrace+">
   <meta property="og:title" content="NoTrace+">
-  <meta property="og:description" content="Strip photo metadata, clean tracking parameters from URLs, and search privately — browser-first, open source.">
+  <meta property="og:description" content="Two in-browser privacy tools plus a DuckDuckGo search shortcut. Local processing, open source.">
   <meta property="og:url" content="https://notrace.plus/">
   <meta property="og:type" content="website">
   <meta property="og:image" content="https://notrace.plus/og.png">
@@ -19,7 +19,7 @@
 
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="NoTrace+">
-  <meta name="twitter:description" content="Strip photo metadata, clean tracking parameters from URLs, and search privately — browser-first, open source.">
+  <meta name="twitter:description" content="Two in-browser privacy tools plus a DuckDuckGo search shortcut. Local processing, open source.">
   <meta name="twitter:image" content="https://notrace.plus/og.png">
 
   <link rel="icon" href="favicon/favicon-32x32.ico" sizes="32x32">
@@ -514,10 +514,39 @@
       font-family: var(--display); font-weight: 700; font-size: 12px; letter-spacing: 0.3px;
     }
     .panel-head-sub { font-size: 11px; color: var(--text-mid); margin-top: 2px; }
-    .verified-badge {
-      font-size: 9px; letter-spacing: 1.5px; color: var(--accent);
-      border: 1px solid rgba(184,255,87,0.3); padding: 3px 8px;
-      border-radius: 3px; text-transform: uppercase;
+    .panel-collapse { border: none; margin: 0; padding: 0; }
+    .panel-collapse > summary {
+      list-style: none;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 16px 20px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .panel-collapse > summary::-webkit-details-marker { display: none; }
+    .panel-collapse > summary::marker { content: ''; }
+    .panel-collapse > summary::after {
+      content: '+';
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--accent);
+      margin-left: auto;
+      flex-shrink: 0;
+    }
+    .panel-collapse[open] > summary {
+      border-bottom: 1px solid var(--border);
+    }
+    .panel-collapse[open] > summary::after { content: '−'; }
+    .panel-collapse > summary:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: -2px;
+    }
+    .panel-collapse > summary img {
+      width: 24px;
+      height: 24px;
+      flex-shrink: 0;
+      display: block;
     }
     .panel-body { padding: 16px 20px; }
 
@@ -551,19 +580,6 @@
     .strip-item svg { width: 13px; height: 13px; stroke: var(--accent); flex-shrink: 0; margin-top: 1px; }
     .strip-item-name { font-size: 11px; color: var(--text); margin-bottom: 2px; }
     .strip-item-eg   { font-size: 10px; color: var(--text-dim); font-style: italic; }
-
-    .headers-list {
-      display: flex; flex-direction: column; gap: 5px;
-      container-type: inline-size;
-      container-name: headers;
-    }
-    .header-row {
-      display: flex; gap: 12px; padding: 8px 12px;
-      background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 6px; align-items: baseline; flex-wrap: wrap;
-    }
-    .header-key  { font-size: 10px; color: var(--accent); min-width: 200px; flex-shrink: 0; }
-    .header-val  { font-size: 10px; color: var(--text-dim); font-style: italic; word-break: break-all; }
 
     /* ── Footer ── */
     .footer-meta {
@@ -682,44 +698,6 @@
 
     .hidden { display: none !important; }
 
-    /*
-     * Security header rows: stack key above value when the list column is narrow
-     * (container query), and on narrow viewports for browsers without @container.
-     */
-    @container headers (max-width: 700px) {
-      .header-row {
-        flex-direction: column;
-        align-items: stretch;
-        flex-wrap: nowrap;
-        gap: 4px;
-      }
-      .header-key,
-      .header-val {
-        display: block;
-        width: 100%;
-        max-width: 100%;
-        min-width: 0;
-      }
-      .header-key { flex-shrink: 0; }
-    }
-
-    @media (max-width: 768px) {
-      .header-row {
-        flex-direction: column;
-        align-items: stretch;
-        flex-wrap: nowrap;
-        gap: 4px;
-      }
-      .header-key,
-      .header-val {
-        display: block;
-        width: 100%;
-        max-width: 100%;
-        min-width: 0;
-      }
-      .header-key { flex-shrink: 0; }
-    }
-
     /* ── Responsive ── */
     @media (max-width: 580px) {
       .page { padding: 32px 16px 48px; }
@@ -744,8 +722,7 @@
       <img src="logo.png" alt="NoTrace+" class="logo-img">
     </div>
     <p class="header-desc">
-      Three privacy tools in one. Strip photo metadata, clean tracking parameters from URLs, and search privately.
-      Runs entirely in your browser — we never receive your files or URLs.
+      Two in-browser tools and a DuckDuckGo search shortcut. Strip photo metadata and clean URL tracking params locally — we never receive those files or URLs.
     </p>
     <div class="trust-bar">
       <div class="trust-pill"><span class="dot"></span> Open source</div>
@@ -779,7 +756,7 @@
         <circle cx="11" cy="11" r="8"/>
         <line x1="21" y1="21" x2="16.65" y2="16.65"/>
       </svg>
-      <span class="tool-tab-label">Private Search</span>
+      <span class="tool-tab-label">Search</span>
     </button>
   </nav>
 
@@ -843,45 +820,37 @@
         <img src="icons/shield.png" alt="">
         <div class="panel-head-text">
           <div class="panel-head-title">How it works</div>
-          <div class="panel-head-sub">Technically enforced — not just a promise.</div>
+          <div class="panel-head-sub">Processed in your browser — nothing is uploaded.</div>
         </div>
-        <span class="verified-badge">Verified</span>
       </div>
       <div class="panel-body">
         <div class="how-list">
           <div class="how-item">
-            <div class="how-num">01</div>
+            <div class="how-num">✓</div>
             <div class="how-text">
-              <strong>Files are read via the Web File API</strong>
-              <span>Your browser reads the image directly from disk into memory. No network request is made. The file bytes never touch a server.</span>
+              <strong>Processed entirely in your browser</strong>
+              <span>Your photos are read from disk into memory. NoTrace+ never receives them.</span>
             </div>
           </div>
           <div class="how-item">
-            <div class="how-num">02</div>
+            <div class="how-num">✓</div>
             <div class="how-text">
-              <strong>Metadata is stripped by re-rendering through Canvas</strong>
-              <span>The image is drawn onto an HTML Canvas element and re-exported. The Canvas API only copies pixel data — all EXIF, XMP, IPTC, and ICC metadata is discarded.</span>
+              <strong>Metadata removed by re-exporting the image</strong>
+              <span>The image is redrawn without EXIF, GPS, device info, and other embedded fields.</span>
             </div>
           </div>
           <div class="how-item">
-            <div class="how-num">03</div>
+            <div class="how-num">✓</div>
             <div class="how-text">
-              <strong>The clean file is generated in-memory</strong>
-              <span>canvas.toBlob() creates a new Blob entirely in browser memory. It is handed directly to a download link — never transmitted anywhere.</span>
-            </div>
-          </div>
-          <div class="how-item">
-            <div class="how-num">04</div>
-            <div class="how-text">
-              <strong>CSP headers block all outbound connections</strong>
-              <span>The server sends <code>connect-src 'none'</code> — even if malicious code were injected, it cannot make network requests. Your images are physically unable to leave your browser.</span>
+              <strong>Clean file downloads directly</strong>
+              <span>The stripped copy is generated in memory and saved to your device — not sent anywhere.</span>
             </div>
           </div>
           <div class="how-item">
             <div class="how-num">!</div>
             <div class="how-text">
-              <strong>EXIF removal is one layer — not a complete anonymity solution</strong>
-              <span>Stripped images still carry visual content. Faces, landmarks, vehicle plates, and background details can identify location and identity regardless of metadata. If the image itself is sensitive, consider whether sharing it at all is appropriate.</span>
+              <strong>One layer — not full privacy</strong>
+              <span>Stripped photos can still reveal identity through faces, landmarks, plates, or background details. If the image itself is sensitive, consider whether sharing it is appropriate.</span>
             </div>
           </div>
         </div>
@@ -890,15 +859,16 @@
 
     <!-- What gets stripped -->
     <div class="panel">
-      <div class="panel-head">
-        <img src="icons/trash.png" alt="">
-        <div class="panel-head-text">
-          <div class="panel-head-title">10+ metadata categories stripped</div>
-          <div class="panel-head-sub">All metadata fields removed from the output file.</div>
-        </div>
-      </div>
-      <div class="panel-body">
-        <div class="strip-grid">
+      <details class="panel-collapse">
+        <summary>
+          <img src="icons/trash.png" alt="">
+          <div class="panel-head-text">
+            <div class="panel-head-title">10+ metadata categories stripped</div>
+            <div class="panel-head-sub">GPS, device model, timestamps, camera settings, and more.</div>
+          </div>
+        </summary>
+        <div class="panel-body">
+          <div class="strip-grid">
           <div class="strip-item">
             <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
             <div><div class="strip-item-name">GPS Coordinates</div><div class="strip-item-eg">Lat/long, altitude, bearing, speed</div></div>
@@ -948,7 +918,8 @@
             <div><div class="strip-item-name">Comments &amp; Notes</div><div class="strip-item-eg">User-added captions, descriptions</div></div>
           </div>
         </div>
-      </div>
+        </div>
+      </details>
     </div>
   </div><!-- /notrace -->
 
@@ -1006,45 +977,37 @@
         <img src="icons/shield.png" alt="">
         <div class="panel-head-text">
           <div class="panel-head-title">How it works</div>
-          <div class="panel-head-sub">Client-side only — the URL never leaves your browser.</div>
+          <div class="panel-head-sub">Parsed in your browser — the URL never leaves your device.</div>
         </div>
-        <span class="verified-badge">Verified</span>
       </div>
       <div class="panel-body">
         <div class="how-list">
           <div class="how-item">
-            <div class="how-num">01</div>
+            <div class="how-num">✓</div>
             <div class="how-text">
-              <strong>URL is parsed entirely in JavaScript</strong>
-              <span>No fetch, no XHR, no server. The URL string is parsed with the browser's built-in <code>URL()</code> API — no network request is made.</span>
+              <strong>Parsed locally — no network request</strong>
+              <span>The URL is cleaned in JavaScript. Nothing is sent to NoTrace+ or anywhere else.</span>
             </div>
           </div>
           <div class="how-item">
-            <div class="how-num">02</div>
+            <div class="how-num">✓</div>
             <div class="how-text">
-              <strong>190+ known tracking parameters are matched and removed</strong>
-              <span>The parameter list covers Google, Meta, UTM, Microsoft, Twitter/X, TikTok, YouTube, LinkedIn, HubSpot, Mailchimp, and 20+ other platforms.</span>
+              <strong>190+ known tracking parameters removed</strong>
+              <span>Covers UTM tags, click IDs, and params from major ad, social, and email platforms.</span>
             </div>
           </div>
           <div class="how-item">
-            <div class="how-num">03</div>
+            <div class="how-num">✓</div>
             <div class="how-text">
-              <strong>Non-tracking parameters are preserved exactly</strong>
-              <span>Only known tracking keys are removed. Query parameters that affect page content (search terms, filters, product IDs) are left intact.</span>
-            </div>
-          </div>
-          <div class="how-item">
-            <div class="how-num">04</div>
-            <div class="how-text">
-              <strong>CSP <code>connect-src 'none'</code> enforces zero transmission</strong>
-              <span>Even if malicious code were injected, the browser blocks all outbound network connections. Your URLs cannot leave the page.</span>
+              <strong>Meaningful parameters are kept</strong>
+              <span>Search terms, filters, product IDs, and other content-affecting params stay intact.</span>
             </div>
           </div>
           <div class="how-item">
             <div class="how-num">!</div>
             <div class="how-text">
-              <strong>Tracking parameters are one layer — not the whole picture</strong>
-              <span>Trackers also use first-party cookies, browser fingerprinting, server-side logging, and IP-based identification — none of which are visible in the URL. Stripping tracking parameters reduces one signal, not all tracking.</span>
+              <strong>One layer — not all tracking</strong>
+              <span>Trackers also use cookies, fingerprinting, server-side logging, and IP-based identification — none of which are visible in the URL. Stripping parameters reduces one signal, not all tracking.</span>
             </div>
           </div>
         </div>
@@ -1053,15 +1016,16 @@
 
     <!-- What gets stripped -->
     <div class="panel">
-      <div class="panel-head">
-        <img src="icons/trash.png" alt="">
-        <div class="panel-head-text">
-          <div class="panel-head-title">190+ tracking parameters covered</div>
-          <div class="panel-head-sub">All major ad networks, email platforms, and analytics vendors.</div>
-        </div>
-      </div>
-      <div class="panel-body">
-        <div class="strip-grid">
+      <details class="panel-collapse">
+        <summary>
+          <img src="icons/trash.png" alt="">
+          <div class="panel-head-text">
+            <div class="panel-head-title">190+ tracking parameters covered</div>
+            <div class="panel-head-sub">Google, Meta, UTM, Microsoft, X, email platforms, and more.</div>
+          </div>
+        </summary>
+        <div class="panel-body">
+          <div class="strip-grid">
           <div class="strip-item"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M8.56 2.75c4.37 6.03 6.02 9.42 8.03 17.72m2.54-15.38c-3.72 4.35-8.94 5.66-16.88 5.85m19.5 1.9c-3.5-.93-6.63-.82-8.94 0-2.58.92-5.01 2.86-7.44 6.32"/></svg>
             <div><div class="strip-item-name">Google</div><div class="strip-item-eg">gclid, dclid, srsltid, _ga, ved…</div></div>
           </div>
@@ -1099,7 +1063,8 @@
             <div><div class="strip-item-name">Yandex, Adobe, Piwik</div><div class="strip-item-eg">yclid, s_kwcid, pk_campaign…</div></div>
           </div>
         </div>
-      </div>
+        </div>
+      </details>
     </div>
   </div><!-- /notrack -->
 
@@ -1117,7 +1082,7 @@
           class="search-input"
           id="searchInput"
           type="text"
-          placeholder="Search via DuckDuckGo — no tracking, no search history"
+          placeholder="Search via DuckDuckGo — less profiling, not invisible"
           autocomplete="off"
           spellcheck="false"
         >
@@ -1125,10 +1090,8 @@
       </div>
 
       <p class="search-note">
-        Searches open in a new tab at <a href="https://duckduckgo.com" target="_blank" rel="noopener noreferrer">duckduckgo.com</a> with
-        safe search off and strict privacy parameters enforced in the URL. DuckDuckGo does not store search history
-        or build user profiles. NoTrace+ does not log, store, or transmit your search terms — they are only ever
-        passed directly to DuckDuckGo as a URL parameter when you press search.
+        Search opens <a href="https://duckduckgo.com" target="_blank" rel="noopener noreferrer">duckduckgo.com</a> in a new tab.
+        NoTrace+ never logs what you type. DuckDuckGo is chosen for its no-profile policy — but it still receives your query and IP, like any search site.
       </p>
     </div>
 
@@ -1138,7 +1101,7 @@
         <img src="icons/shield.png" alt="">
         <div class="panel-head-text">
           <div class="panel-head-title">How it works</div>
-          <div class="panel-head-sub">DuckDuckGo opens in a new tab only after you click search.</div>
+          <div class="panel-head-sub">A shortcut to DuckDuckGo — not a search engine itself.</div>
         </div>
       </div>
       <div class="panel-body">
@@ -1146,84 +1109,35 @@
           <div class="how-item">
             <div class="how-num">✓</div>
             <div class="how-text">
-              <strong>Your search terms are not logged here</strong>
-              <span>NoTrace+ does not store, transmit, or log what you type. The search term leaves your browser only when you press search, passed directly to DuckDuckGo as a URL query parameter.</span>
+              <strong>Nothing is logged on this page</strong>
+              <span>Your search only leaves your browser when you click Search. NoTrace+ does not store or transmit it.</span>
             </div>
           </div>
           <div class="how-item">
             <div class="how-num">✓</div>
             <div class="how-text">
-              <strong>DuckDuckGo does not build user profiles</strong>
-              <span>DuckDuckGo's stated policy is that they do not store personal information or search history tied to your IP address. They make money through contextual ads based on search terms, not user profiling.</span>
+              <strong>Less profiling, not invisibility</strong>
+              <span>DuckDuckGo's policy is not to tie searches to a long-term profile or stored history. That is different from being anonymous.</span>
             </div>
           </div>
           <div class="how-item">
             <div class="how-num">✓</div>
             <div class="how-text">
-              <strong>Strict privacy parameters enforced in the URL</strong>
-              <span><code>kp=-2</code> disables safe search filtering. No affiliate IDs, referrer tokens, or tracking parameters are added to the query.</span>
+              <strong>Clean search URL</strong>
+              <span>No affiliate IDs or tracking parameters are added — only your query and privacy-focused settings.</span>
             </div>
           </div>
           <div class="how-item">
             <div class="how-num">!</div>
             <div class="how-text">
-              <strong>DuckDuckGo still receives your search term and IP address</strong>
-              <span>This is an inherent limitation of any web-based search engine. NoTrace+ cannot change this. When you search, DuckDuckGo receives your query and IP address, as with any direct request to an external service.</span>
+              <strong>What DuckDuckGo still sees</strong>
+              <span>Your search term and IP address, as with any direct request to an external search engine.</span>
             </div>
           </div>
         </div>
       </div>
     </div>
   </div><!-- /nosearch -->
-
-  <!-- ══════════════════════════════════════════════════
-       SHARED: Security Headers
-  ══════════════════════════════════════════════════ -->
-  <div class="panel" style="margin-top: 8px;">
-    <div class="panel-head">
-      <img src="icons/lock.png" alt="">
-      <div class="panel-head-text">
-        <div class="panel-head-title">Security headers</div>
-        <div class="panel-head-sub">Enforced server-side on every response via vercel.json.</div>
-      </div>
-    </div>
-    <div class="panel-body">
-      <div class="headers-list">
-        <div class="header-row">
-          <span class="header-key">Content-Security-Policy</span>
-          <span class="header-val">connect-src 'none' — all outbound network connections blocked at browser level</span>
-        </div>
-        <div class="header-row">
-          <span class="header-key">Permissions-Policy</span>
-          <span class="header-val">camera=(), microphone=(), geolocation=() — hardware access denied</span>
-        </div>
-        <div class="header-row">
-          <span class="header-key">Referrer-Policy</span>
-          <span class="header-val">no-referrer — nothing leaked to external resources</span>
-        </div>
-        <div class="header-row">
-          <span class="header-key">Strict-Transport-Security</span>
-          <span class="header-val">max-age=63072000; includeSubDomains; preload — HTTPS only, 2 years</span>
-        </div>
-        <div class="header-row">
-          <span class="header-key">Cross-Origin-Embedder-Policy</span>
-          <span class="header-val">require-corp — prevents cross-origin data leakage</span>
-        </div>
-        <div class="header-row">
-          <span class="header-key">Cross-Origin-Opener-Policy</span>
-          <span class="header-val">same-origin — isolates browsing context</span>
-        </div>
-        <div class="header-row">
-          <span class="header-key">X-Frame-Options</span>
-          <span class="header-val">DENY — cannot be iframed or clickjacked</span>
-        </div>
-        <div class="header-row">
-          <span class="header-key">X-Content-Type-Options</span>
-          <span class="header-val">nosniff — MIME type cannot be overridden</span>
-        </div>
-      </div>
-    </div>
-  </div>
 
   <!-- ══════════════════════════════════════════════════
        FOOTER
